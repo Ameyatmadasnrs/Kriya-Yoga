@@ -30,12 +30,33 @@ class YogaApp {
     async loadData() {
         try {
             const response = await fetch('data/book.json');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             this.data = await response.json();
             document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
         } catch (error) {
-            console.error('Error loading data:', error);
-            this.showToast('Ошибка загрузки данных');
+            console.error('Error loading data via fetch:', error);
+            // Fallback: Try to load data embedded in HTML for local file access
+            this.loadEmbeddedData();
         }
+    }
+
+    loadEmbeddedData() {
+        // Check if data is embedded in a script tag (for local file access)
+        const embeddedData = document.getElementById('embeddedBookData');
+        if (embeddedData && embeddedData.textContent) {
+            try {
+                this.data = JSON.parse(embeddedData.textContent);
+                document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
+                console.log('Loaded embedded book data successfully');
+                return;
+            } catch (e) {
+                console.error('Error parsing embedded data:', e);
+            }
+        }
+        console.error('Error loading data: Please run this app via a local server (e.g., python -m http.server) or use VS Code Live Server extension.');
+        this.showToast('Запустите через локальный сервер или используйте Live Server в VS Code');
     }
 
     checkDailyStreak() {
