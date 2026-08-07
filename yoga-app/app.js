@@ -165,17 +165,23 @@ class YogaApp {
         const container = document.getElementById('lessonsList');
         container.innerHTML = '';
 
-        for (const [lessonNum, lesson] of Object.entries(this.data.lessons)) {
+        // Sort lessons numerically
+        const sortedLessons = Object.entries(this.data.lessons)
+            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+        for (const [lessonNum, lesson] of sortedLessons) {
             const lessonEl = document.createElement('div');
             lessonEl.className = 'lesson-item';
             lessonEl.dataset.lesson = lessonNum;
             
-            const topicCount = Object.keys(lesson.topics).length;
+            // Sort topics numerically
+            const sortedTopics = Object.entries(lesson.topics)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
             
             lessonEl.innerHTML = `
                 <div class="lesson-title">Урок ${lessonNum}</div>
                 <ul class="topic-list">
-                    ${Object.entries(lesson.topics).map(([topicNum, topic]) => `
+                    ${sortedTopics.map(([topicNum, topic]) => `
                         <li class="topic-item" data-lesson="${lessonNum}" data-topic="${topicNum}">
                             Тема ${topicNum}: ${topic.name}
                         </li>
@@ -505,17 +511,29 @@ class YogaApp {
         const results = [];
         const lowerQuery = query.toLowerCase();
         
-        // Search through all topics in lessons
-        for (const [lessonNum, lesson] of Object.entries(this.data.lessons)) {
-            for (const [topicNum, topic] of Object.entries(lesson.topics)) {
+        // Search through all topics in lessons, sorted
+        const sortedLessons = Object.entries(this.data.lessons)
+            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+        for (const [lessonNum, lesson] of sortedLessons) {
+            const sortedTopics = Object.entries(lesson.topics)
+                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+
+            for (const [topicNum, topic] of sortedTopics) {
                 const text = topic.text.toLowerCase();
-                
-                if (text.includes(lowerQuery)) {
-                    // Find context around the match
+                const name = topic.name.toLowerCase();
+
+                if (text.includes(lowerQuery) || name.includes(lowerQuery)) {
+                    // Find context around the match in text
                     const index = text.indexOf(lowerQuery);
-                    const start = Math.max(0, index - 50);
-                    const end = Math.min(topic.text.length, index + query.length + 50);
-                    const snippet = topic.text.substring(start, end).replace(/\n/g, ' ');
+                    let snippet = '';
+                    if (index !== -1) {
+                        const start = Math.max(0, index - 50);
+                        const end = Math.min(topic.text.length, index + query.length + 50);
+                        snippet = topic.text.substring(start, end).replace(/\n/g, ' ');
+                    } else {
+                        snippet = topic.text.substring(0, 100).replace(/\n/g, ' ');
+                    }
                     
                     results.push({
                         lesson: lessonNum,
