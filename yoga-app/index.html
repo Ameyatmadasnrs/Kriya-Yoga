@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ancient Yoga & Kriya - Premium Learning</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <h1 class="logo" id="appTitle">Крийя Йога</h1>
+                <div class="header-actions">
+                    <button class="icon-btn" id="searchBtn" title="Поиск">🔍</button>
+                    <button class="icon-btn" id="bookmarksBtn" title="Закладки">🔖</button>
+                    <button class="icon-btn" id="favoritesBtn" title="Избранное">❤️</button>
+                    <button class="icon-btn" id="progressBtn" title="Прогресс">📊</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <nav class="lesson-nav">
+                <h2>Содержание</h2>
+                <div id="lessonsList"></div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <div id="contentArea"></div>
+        </main>
+
+        <!-- Search Modal -->
+        <div class="modal" id="searchModal">
+            <div class="modal-content search-modal">
+                <span class="close-btn" id="closeSearch">&times;</span>
+                <h2>🔍 Поиск по тексту</h2>
+                <input type="text" id="searchInput" placeholder="Введите поисковый запрос..." class="search-input">
+                <div id="searchResults" class="search-results"></div>
+            </div>
+        </div>
+
+        <!-- Bookmarks Modal -->
+        <div class="modal" id="bookmarksModal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeBookmarks">&times;</span>
+                <h2>🔖 Закладки</h2>
+                <div id="bookmarksList" class="list-container"></div>
+            </div>
+        </div>
+
+        <!-- Favorites Modal -->
+        <div class="modal" id="favoritesModal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeFavorites">&times;</span>
+                <h2>❤️ Избранное</h2>
+                <div id="favoritesList" class="list-container"></div>
+            </div>
+        </div>
+
+        <!-- Progress Modal -->
+        <div class="modal" id="progressModal">
+            <div class="modal-content progress-modal">
+                <span class="close-btn" id="closeProgress">&times;</span>
+                <h2>📊 Прогресс обучения</h2>
+                <div id="progressContent" class="progress-content"></div>
+            </div>
+        </div>
+
+        <!-- Notes Modal -->
+        <div class="modal" id="notesModal">
+            <div class="modal-content">
+                <span class="close-btn" id="closeNotes">&times;</span>
+                <h2>📝 Заметки</h2>
+                <div id="notesList" class="list-container"></div>
+            </div>
+        </div>
+
+        <!-- Timer Modal -->
+        <div class="modal" id="timerModal">
+            <div class="modal-content timer-modal">
+                <span class="close-btn" id="closeTimer">&times;</span>
+                <h2>🧘 Таймер медитации</h2>
+                <div id="timerContent" class="timer-content"></div>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div class="toast" id="toast"></div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
