@@ -15,7 +15,8 @@ class YogaApp {
         this.dailyStreak = 0;
         this.lastVisitDate = null;
         this.achievements = [];
-        
+        this.expandedLessons = new Set();
+
         this.init();
     }
 
@@ -199,7 +200,8 @@ class YogaApp {
 
         for (const [lessonNum, lesson] of sortedLessons) {
             const lessonEl = document.createElement('div');
-            lessonEl.className = 'lesson-item';
+            const isExpanded = this.expandedLessons.has(lessonNum);
+            lessonEl.className = `lesson-item ${isExpanded ? 'expanded' : 'collapsed'} ${this.currentLesson === lessonNum ? 'active' : ''}`;
             lessonEl.dataset.lesson = lessonNum;
             
             // Sort topics numerically
@@ -210,30 +212,40 @@ class YogaApp {
                 <div class="lesson-title">Урок ${lessonNum}</div>
                 <ul class="topic-list">
                     ${sortedTopics.map(([topicNum, topic]) => `
-                        <li class="topic-item" data-lesson="${lessonNum}" data-topic="${topicNum}">
+                        <li class="topic-item ${this.currentLesson === lessonNum && this.currentTopic === topicNum ? 'active' : ''}"
+                            data-lesson="${lessonNum}" data-topic="${topicNum}">
                             Тема ${topicNum}: ${topic.name}
                         </li>
                     `).join('')}
                 </ul>
             `;
             
+            // Toggle expansion on title click
+            lessonEl.querySelector('.lesson-title').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const currentlyExpanded = this.expandedLessons.has(lessonNum);
+                if (currentlyExpanded) {
+                    this.expandedLessons.delete(lessonNum);
+                    lessonEl.classList.remove('expanded');
+                    lessonEl.classList.add('collapsed');
+                } else {
+                    this.expandedLessons.add(lessonNum);
+                    lessonEl.classList.add('expanded');
+                    lessonEl.classList.remove('collapsed');
+                }
+            });
+
             container.appendChild(lessonEl);
         }
 
-        // Add click handlers
+        // Add click handlers for topics
         container.querySelectorAll('.topic-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const lesson = item.dataset.lesson;
                 const topic = item.dataset.topic;
                 this.loadTopic(lesson, topic);
-                
-                // Update active states
-                container.querySelectorAll('.topic-item').forEach(t => t.classList.remove('active'));
-                item.classList.add('active');
-                container.querySelectorAll('.lesson-item').forEach(l => l.classList.remove('active'));
-                container.querySelector(`.lesson-item[data-lesson="${lesson}"]`).classList.add('active');
-                
+
                 // Close sidebar on mobile
                 if (window.innerWidth <= 768) {
                     document.getElementById('sidebar').classList.remove('show');
@@ -251,8 +263,12 @@ class YogaApp {
             console.error('Topic not found:', lessonNum, topicNum);
             return;
         }
-        
+
+        // Ensure lesson is expanded
+        this.expandedLessons.add(lessonNum);
+
         const topic = lesson.topics[topicNum];
+        this.renderLessonsList(); // Refresh nav to show active and expanded states
         this.renderTopic(lessonNum, topicNum, topic);
         this.updateReadingProgress(lessonNum, topicNum);
     }
@@ -260,23 +276,13 @@ class YogaApp {
     renderTopic(lessonNum, topicNum, topic) {
         const contentArea = document.getElementById('contentArea');
         
-        // Format the text content
-        const formattedContent = this.formatContent(topic.text);
-
         // Find images for this topic
         const topicImages = this.imageMap.filter(img =>
-            img.lesson === lessonNum && img.topic === topicNum
+            String(img.lesson) === String(lessonNum) && String(img.topic) === String(topicNum)
         );
 
-        const imagesHtml = topicImages.map(img => `
-            <div class="topic-image-container">
-                <img src="assets/images/${img.image_filename}"
-                     alt="${img.topic_title || topic.name}"
-                     class="topic-image"
-                     onerror="this.style.display='none'">
-                ${img.topic_title ? `<div class="image-caption">${img.topic_title}</div>` : ''}
-            </div>
-        `).join('');
+        // Format the text content with smart image placement based on PDF layout
+        const formattedContent = this.formatContent(topic.text, topicImages, topic.start_page);
 
         const isBookmarked = this.bookmarks.some(b => b.lesson === lessonNum && b.topic === topicNum);
         const isFavorite = this.favorites.some(f => f.lesson === lessonNum && f.topic === topicNum);
@@ -288,7 +294,6 @@ class YogaApp {
             </div>
             
             <div class="page-content">
-                ${imagesHtml}
                 ${formattedContent}
             </div>
             
@@ -313,8 +318,9 @@ class YogaApp {
         document.getElementById('prevBtn').addEventListener('click', () => this.navigateTopic(-1));
         document.getElementById('nextBtn').addEventListener('click', () => this.navigateTopic(1));
 
-        // Scroll to top
+        // Scroll to top - ensure both container and window scroll
         document.getElementById('mainContent').scrollTop = 0;
+        window.scrollTo(0, 0);
     }
 
     navigateTopic(direction) {
@@ -349,27 +355,111 @@ class YogaApp {
         }
     }
 
-    formatContent(text) {
+    /**
+     * Formats book text into HTML, dynamically inserting images from image-map.json
+     * based on PDF page positions instead of inline markers.
+     */
+    formatContent(text, topicImages = [], startPage = 0) {
         if (!text) return '';
-        
-        // Split into paragraphs and process each
-        let paragraphs = text.split('\n\n');
-        
+
+        // Group images by page for efficient placement
+        const imagesByPage = {};
+        topicImages.forEach(img => {
+            const page = parseInt(img.pdf_page);
+            if (!imagesByPage[page]) imagesByPage[page] = [];
+            imagesByPage[page].push(img);
+        });
+
+        // Split text by PDF page markers: \n(\d+)\n
+        // We capture the page number to identify where each text block belongs
+        const parts = text.split(/\n(\d+)\n/);
+
+        let htmlResult = '';
+        let currentPage = parseInt(startPage);
+
+        for (let i = 0; i < parts.length; i++) {
+            if (i % 2 === 0) {
+                // This is a block of text belonging to currentPage
+                const segmentText = parts[i];
+
+                if (segmentText.trim()) {
+                    // 1. Insert images associated with this PDF page at the top of the block
+                    if (imagesByPage[currentPage]) {
+                        imagesByPage[currentPage].forEach(img => {
+                            htmlResult += this.generateImageHtml(img);
+                        });
+                        // Mark as used
+                        delete imagesByPage[currentPage];
+                    }
+
+                    // 2. Convert raw text to formatted paragraphs/headers
+                    htmlResult += this.processTextSegment(segmentText);
+                }
+            } else {
+                // This is a page number marker (\d+)
+                const pageNum = parseInt(parts[i]);
+
+                // Optional: Render a subtle divider for the original PDF page break
+                htmlResult += `<div class="page-break-marker" title="PDF Page ${pageNum}"></div>`;
+
+                // The next text block will belong to the page following this marker
+                currentPage = pageNum + 1;
+            }
+        }
+
+        // Safety: Insert any images that weren't placed (e.g. if page numbers didn't match perfectly)
+        Object.keys(imagesByPage).forEach(page => {
+            imagesByPage[page].forEach(img => {
+                htmlResult += this.generateImageHtml(img);
+            });
+        });
+
+        return htmlResult;
+    }
+
+    /**
+     * Processes a raw text segment into HTML paragraphs and headers.
+     */
+    processTextSegment(text) {
+        if (!text) return '';
+
+        // Split by double newlines for paragraph separation
+        let paragraphs = text.split(/\n\n+/);
+
         return paragraphs.map(p => {
             p = p.trim();
             if (!p) return '';
-            
-            // Check if it's a header
-            if (p.match(/^[А-ЯЁ][А-ЯЁ\s]+$/i) && p.length < 60) {
+
+            // Clean up any legacy image markers that might have leaked into data (though forbidden)
+            p = p.replace(/\[\[IMG:[^\]]+\]\]/g, '');
+            if (!p) return '';
+
+            // Header detection: ALL CAPS, short length
+            if (p.match(/^[А-ЯЁ\d\.\s\-]+$/) && p.length < 100 && p === p.toUpperCase()) {
                 return `<h3>${p}</h3>`;
             }
-            
-            // Replace common patterns
-            p = p.replace(/\n/g, '<br>');
-            
-            // Wrap in paragraph tag
-            return `<p>${p}</p>`;
+
+            // Normal paragraph: handle internal newlines from PDF export as line breaks
+            let formattedText = p.replace(/\n/g, '<br>');
+            return `<p>${formattedText}</p>`;
         }).filter(p => p).join('');
+    }
+
+    /**
+     * Generates HTML for an image from image-map.json
+     */
+    generateImageHtml(img) {
+        const filename = img.image_filename;
+        const caption = img.topic_title || '';
+        return `
+            <div class="topic-image-container">
+                <img src="assets/images/${filename}"
+                     alt="${caption}"
+                     class="topic-image"
+                     loading="lazy"
+                     onerror="this.style.display='none'">
+                ${caption ? `<div class="image-caption">${caption}</div>` : ''}
+            </div>`;
     }
 
     updateReadingProgress(lessonNum, topicNum) {
@@ -611,7 +701,7 @@ class YogaApp {
 
     renderFrontMatterPage(page) {
         const contentArea = document.getElementById('contentArea');
-        const formattedContent = this.formatContent(page.text);
+        const formattedContent = this.formatContent(page.text, [], page.page);
         
         contentArea.innerHTML = `
             <div class="page-header">
