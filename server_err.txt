@@ -1,0 +1,14 @@
+::ffff:127.0.0.1 - - [07/Aug/2026 16:59:42] "HEAD / HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:00:28] "GET /assets/images/img027.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:00:46] "HEAD /data/book.json HTTP/1.1" 200 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:01:42] "GET / HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:01:42] "GET /styles.css HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:01:43] "GET /app.js HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:01:52] "GET /assets/images/img003.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:01:53] "GET /assets/images/img004.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:01:53] "GET /assets/images/img005.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:02:04] "GET /assets/images/img006.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:02:06] "GET /assets/images/img007.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:02:06] "GET /assets/images/img008.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:02:13] "GET /assets/images/img012.jpg HTTP/1.1" 304 -
+::ffff:127.0.0.1 - - [07/Aug/2026 17:02:14] "GET /assets/images/img013.jpg HTTP/1.1" 304 -
