@@ -2,6 +2,7 @@
 class YogaApp {
     constructor() {
         this.data = null;
+        this.imageMap = [];
         this.currentLesson = null;
         this.currentTopic = null;
         this.bookmarks = [];
@@ -29,15 +30,29 @@ class YogaApp {
 
     async loadData() {
         try {
-            const response = await fetch('data/book.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Load book data
+            const bookResponse = await fetch('data/book.json');
+            if (bookResponse.ok) {
+                this.data = await bookResponse.json();
+            } else {
+                console.warn('Book data not found via fetch');
             }
-            this.data = await response.json();
-            document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
+
+            // Load image map
+            const imageMapResponse = await fetch('assets/images/image-map.json');
+            if (imageMapResponse.ok) {
+                this.imageMap = await imageMapResponse.json();
+            } else {
+                console.warn('Image map not found via fetch');
+            }
+
+            if (this.data) {
+                document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
+            } else {
+                this.loadEmbeddedData();
+            }
         } catch (error) {
             console.error('Error loading data via fetch:', error);
-            // Fallback: Try to load data embedded in HTML for local file access
             this.loadEmbeddedData();
         }
     }
@@ -45,18 +60,31 @@ class YogaApp {
     loadEmbeddedData() {
         // Check if data is embedded in a script tag (for local file access)
         const embeddedData = document.getElementById('embeddedBookData');
+        const embeddedImageMap = document.getElementById('embeddedImageMap');
+
         if (embeddedData && embeddedData.textContent) {
             try {
                 this.data = JSON.parse(embeddedData.textContent);
                 document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
                 console.log('Loaded embedded book data successfully');
-                return;
             } catch (e) {
                 console.error('Error parsing embedded data:', e);
             }
         }
-        console.error('Error loading data: Please run this app via a local server (e.g., python -m http.server) or use VS Code Live Server extension.');
-        this.showToast('Запустите через локальный сервер или используйте Live Server в VS Code');
+
+        if (embeddedImageMap && embeddedImageMap.textContent) {
+            try {
+                this.imageMap = JSON.parse(embeddedImageMap.textContent);
+                console.log('Loaded embedded image map successfully');
+            } catch (e) {
+                console.error('Error parsing embedded image map:', e);
+            }
+        }
+
+        if (!this.data) {
+            console.error('Error loading data: Please run this app via a local server (e.g., python -m http.server) or use VS Code Live Server extension.');
+            this.showToast('Запустите через локальный сервер или используйте Live Server в VS Code');
+        }
     }
 
     checkDailyStreak() {
@@ -234,7 +262,22 @@ class YogaApp {
         
         // Format the text content
         const formattedContent = this.formatContent(topic.text);
-        
+
+        // Find images for this topic
+        const topicImages = this.imageMap.filter(img =>
+            img.lesson === lessonNum && img.topic === topicNum
+        );
+
+        const imagesHtml = topicImages.map(img => `
+            <div class="topic-image-container">
+                <img src="assets/images/${img.image_filename}"
+                     alt="${img.topic_title || topic.name}"
+                     class="topic-image"
+                     onerror="this.style.display='none'">
+                ${img.topic_title ? `<div class="image-caption">${img.topic_title}</div>` : ''}
+            </div>
+        `).join('');
+
         const isBookmarked = this.bookmarks.some(b => b.lesson === lessonNum && b.topic === topicNum);
         const isFavorite = this.favorites.some(f => f.lesson === lessonNum && f.topic === topicNum);
         
@@ -245,6 +288,7 @@ class YogaApp {
             </div>
             
             <div class="page-content">
+                ${imagesHtml}
                 ${formattedContent}
             </div>
             
@@ -599,6 +643,9 @@ class YogaApp {
             </div>
             
             <div class="page-content">
+                <div class="welcome-image-container">
+                    <img src="assets/images/img001.jpg" alt="Cover Image" class="welcome-image" onerror="this.style.display='none'">
+                </div>
                 <p>Это приложение содержит полный курс древних тантрических техник йоги и крийи.</p>
                 
                 <h3>О курсе</h3>

@@ -543,3 +543,36 @@ body {
         padding: 0;
     }
 }
+
+/* Image Styles */
+.topic-image-container {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.topic-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.image-caption {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.welcome-image-container {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.welcome-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
