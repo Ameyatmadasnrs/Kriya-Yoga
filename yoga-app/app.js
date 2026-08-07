@@ -211,72 +211,92 @@ class YogaApp {
     loadTopic(lessonNum, topicNum) {
         this.currentLesson = lessonNum;
         this.currentTopic = topicNum;
-        this.currentPage = 0;
         
-        const sectionKey = `L${lessonNum}T${topicNum}`;
-        const section = this.data.sections[sectionKey];
-        
-        if (section && section.pages.length > 0) {
-            this.renderPage(section, 0);
-            this.updateReadingProgress(lessonNum, topicNum);
+        const lesson = this.data.lessons[lessonNum];
+        if (!lesson || !lesson.topics[topicNum]) {
+            console.error('Topic not found:', lessonNum, topicNum);
+            return;
         }
+        
+        const topic = lesson.topics[topicNum];
+        this.renderTopic(lessonNum, topicNum, topic);
+        this.updateReadingProgress(lessonNum, topicNum);
     }
 
-    renderPage(section, pageIndex) {
-        if (!section || !section.pages[pageIndex]) return;
-        
-        const page = section.pages[pageIndex];
+    renderTopic(lessonNum, topicNum, topic) {
         const contentArea = document.getElementById('contentArea');
         
         // Format the text content
-        const formattedContent = this.formatContent(page.text);
+        const formattedContent = this.formatContent(topic.text);
         
-        const isBookmarked = this.bookmarks.some(b => b.sectionKey === `L${section.lesson}T${section.topic}` && b.pageIndex === pageIndex);
-        const isFavorite = this.favorites.some(f => f.sectionKey === `L${section.lesson}T${section.topic}`);
+        const isBookmarked = this.bookmarks.some(b => b.lesson === lessonNum && b.topic === topicNum);
+        const isFavorite = this.favorites.some(f => f.lesson === lessonNum && f.topic === topicNum);
         
         contentArea.innerHTML = `
             <div class="page-header">
-                <h1>Урок ${section.lesson}</h1>
-                <div class="subtitle">Тема ${section.topic}: ${section.name}</div>
+                <h1>Урок ${lessonNum}</h1>
+                <div class="subtitle">Тема ${topicNum}: ${topic.name}</div>
             </div>
             
             <div class="page-content">
                 ${formattedContent}
             </div>
             
-            <div class="page-number">Страница ${page.page} из ${this.data.pages.length}</div>
+            <div class="page-number">Тема ${topicNum} из ${Object.keys(this.data.lessons[lessonNum].topics).length}</div>
             
             <div class="content-actions">
-                <button class="action-btn ${isBookmarked ? 'active' : ''}" onclick="app.toggleBookmark('${section.lesson}', '${section.topic}', ${pageIndex})">
+                <button class="action-btn ${isBookmarked ? 'active' : ''}" onclick="app.toggleBookmark('${lessonNum}', '${topicNum}')">
                     ${isBookmarked ? '⭐ Закладка' : '🔖 Добавить закладку'}
                 </button>
-                <button class="action-btn ${isFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${section.lesson}', '${section.topic}')">
+                <button class="action-btn ${isFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${lessonNum}', '${topicNum}')">
                     ${isFavorite ? '❤️ В избранном' : '🤍 В избранное'}
                 </button>
             </div>
             
             <div class="content-nav">
-                <button class="nav-btn" id="prevBtn" ${pageIndex <= 0 ? 'disabled' : ''}>← Назад</button>
-                <button class="nav-btn" id="nextBtn" ${pageIndex >= section.pages.length - 1 ? 'disabled' : ''}>Вперед →</button>
+                <button class="nav-btn" id="prevBtn">← Назад</button>
+                <button class="nav-btn" id="nextBtn">Вперед →</button>
             </div>
         `;
 
         // Setup navigation
-        document.getElementById('prevBtn').addEventListener('click', () => {
-            if (pageIndex > 0) {
-                this.renderPage(section, pageIndex - 1);
-            }
-        });
-        
-        document.getElementById('nextBtn').addEventListener('click', () => {
-            if (pageIndex < section.pages.length - 1) {
-                this.renderPage(section, pageIndex + 1);
-                this.updateReadingProgress(section.lesson, section.topic);
-            }
-        });
+        document.getElementById('prevBtn').addEventListener('click', () => this.navigateTopic(-1));
+        document.getElementById('nextBtn').addEventListener('click', () => this.navigateTopic(1));
 
         // Scroll to top
         document.getElementById('mainContent').scrollTop = 0;
+    }
+
+    navigateTopic(direction) {
+        const lessonNum = this.currentLesson;
+        const topicNum = parseInt(this.currentTopic);
+        const lesson = this.data.lessons[lessonNum];
+        const topicKeys = Object.keys(lesson.topics).map(Number).sort((a, b) => a - b);
+        const currentIndex = topicKeys.indexOf(topicNum);
+        const newIndex = currentIndex + direction;
+        
+        if (newIndex >= 0 && newIndex < topicKeys.length) {
+            // Stay in same lesson
+            this.loadTopic(lessonNum, topicKeys[newIndex].toString());
+        } else if (direction < 0 && currentIndex === 0) {
+            // Go to previous lesson's last topic
+            const prevLessonNum = parseInt(lessonNum) - 1;
+            if (prevLessonNum >= 1) {
+                const prevLesson = this.data.lessons[prevLessonNum.toString()];
+                if (prevLesson) {
+                    const lastTopic = Math.max(...Object.keys(prevLesson.topics).map(Number));
+                    this.loadTopic(prevLessonNum.toString(), lastTopic.toString());
+                }
+            }
+        } else if (direction > 0 && currentIndex === topicKeys.length - 1) {
+            // Go to next lesson's first topic
+            const nextLessonNum = parseInt(lessonNum) + 1;
+            const nextLesson = this.data.lessons[nextLessonNum.toString()];
+            if (nextLesson) {
+                const firstTopic = Math.min(...Object.keys(nextLesson.topics).map(Number));
+                this.loadTopic(nextLessonNum.toString(), firstTopic.toString());
+            }
+        }
     }
 
     formatContent(text) {
@@ -318,54 +338,50 @@ class YogaApp {
         this.saveUserData();
     }
 
-    toggleBookmark(lessonNum, topicNum, pageIndex) {
-        const sectionKey = `L${lessonNum}T${topicNum}`;
-        const section = this.data.sections[sectionKey];
+    toggleBookmark(lessonNum, topicNum) {
         const existingIndex = this.bookmarks.findIndex(b => 
-            b.sectionKey === sectionKey && b.pageIndex === pageIndex
+            b.lesson === lessonNum && b.topic === topicNum
         );
         
         if (existingIndex >= 0) {
             this.bookmarks.splice(existingIndex, 1);
             this.showToast('Закладка удалена');
         } else {
+            const lesson = this.data.lessons[lessonNum];
+            const topic = lesson.topics[topicNum];
             this.bookmarks.push({
-                sectionKey,
                 lesson: lessonNum,
                 topic: topicNum,
-                pageIndex,
-                name: section.name,
-                page: section.pages[pageIndex].page,
+                name: topic.name,
                 added: Date.now()
             });
             this.showToast('Закладка добавлена');
         }
         
         this.saveUserData();
-        this.renderPage(section, pageIndex);
+        this.renderTopic(lessonNum, topicNum, topic);
     }
 
     toggleFavorite(lessonNum, topicNum) {
-        const sectionKey = `L${lessonNum}T${topicNum}`;
-        const section = this.data.sections[sectionKey];
-        const existingIndex = this.favorites.findIndex(f => f.sectionKey === sectionKey);
+        const existingIndex = this.favorites.findIndex(f => f.lesson === lessonNum && f.topic === topicNum);
         
         if (existingIndex >= 0) {
             this.favorites.splice(existingIndex, 1);
             this.showToast('Удалено из избранного');
         } else {
+            const lesson = this.data.lessons[lessonNum];
+            const topic = lesson.topics[topicNum];
             this.favorites.push({
-                sectionKey,
                 lesson: lessonNum,
                 topic: topicNum,
-                name: section.name,
+                name: topic.name,
                 added: Date.now()
             });
             this.showToast('Добавлено в избранное');
         }
         
         this.saveUserData();
-        this.renderPage(section, this.currentPage);
+        this.renderTopic(lessonNum, topicNum, topic);
     }
 
     showBookmarks() {
@@ -378,7 +394,7 @@ class YogaApp {
                 <div class="list-item">
                     <div class="list-item-info" onclick="app.loadBookmark(${index})">
                         <div class="list-item-title">Урок ${bookmark.lesson}, Тема ${bookmark.topic}</div>
-                        <div class="list-item-subtitle">${bookmark.name} • Стр. ${bookmark.page}</div>
+                        <div class="list-item-subtitle">${bookmark.name}</div>
                     </div>
                     <button class="remove-btn" onclick="app.removeBookmark(${index})">Удалить</button>
                 </div>
@@ -435,9 +451,13 @@ class YogaApp {
     }
 
     showProgress() {
-        const totalSections = Object.keys(this.data.sections).length;
-        const sectionsRead = Object.keys(this.readProgress).length;
-        const percentage = Math.round((sectionsRead / totalSections) * 100);
+        // Count total topics from lessons structure
+        let totalTopics = 0;
+        for (const lesson of Object.values(this.data.lessons)) {
+            totalTopics += Object.keys(lesson.topics).length;
+        }
+        const topicsRead = Object.keys(this.readProgress).length;
+        const percentage = Math.round((topicsRead / totalTopics) * 100);
         
         const container = document.getElementById('progressContent');
         container.innerHTML = `
@@ -445,7 +465,7 @@ class YogaApp {
                 <div class="progress-percentage">${percentage}%</div>
                 <div class="progress-label">Пройдено материала</div>
                 <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                    ${sectionsRead} из ${totalSections} тем
+                    ${topicsRead} из ${totalTopics} тем
                 </div>
             </div>
             
@@ -485,50 +505,24 @@ class YogaApp {
         const results = [];
         const lowerQuery = query.toLowerCase();
         
-        // Search through all pages
-        for (const [sectionKey, section] of Object.entries(this.data.sections)) {
-            for (let i = 0; i < section.pages.length; i++) {
-                const page = section.pages[i];
-                const text = page.text.toLowerCase();
+        // Search through all topics in lessons
+        for (const [lessonNum, lesson] of Object.entries(this.data.lessons)) {
+            for (const [topicNum, topic] of Object.entries(lesson.topics)) {
+                const text = topic.text.toLowerCase();
                 
                 if (text.includes(lowerQuery)) {
                     // Find context around the match
                     const index = text.indexOf(lowerQuery);
                     const start = Math.max(0, index - 50);
-                    const end = Math.min(page.text.length, index + query.length + 50);
-                    const snippet = page.text.substring(start, end).replace(/\n/g, ' ');
+                    const end = Math.min(topic.text.length, index + query.length + 50);
+                    const snippet = topic.text.substring(start, end).replace(/\n/g, ' ');
                     
                     results.push({
-                        sectionKey,
-                        lesson: section.lesson,
-                        topic: section.topic,
-                        name: section.name,
-                        pageIndex: i,
-                        page: page.page,
-                        snippet: (start > 0 ? '...' : '') + snippet + (end < page.text.length ? '...' : '')
-                    });
-                }
-            }
-        }
-        
-        // Also search in front matter
-        if (this.data.front_matter && this.data.front_matter.pages) {
-            for (const page of this.data.front_matter.pages) {
-                const text = page.text.toLowerCase();
-                if (text.includes(lowerQuery)) {
-                    const index = text.indexOf(lowerQuery);
-                    const start = Math.max(0, index - 50);
-                    const end = Math.min(page.text.length, index + query.length + 50);
-                    const snippet = page.text.substring(start, end).replace(/\n/g, ' ');
-                    
-                    results.push({
-                        sectionKey: 'front',
-                        lesson: 0,
-                        topic: 0,
-                        name: 'Введение',
-                        pageIndex: page.page - 1,
-                        page: page.page,
-                        snippet: (start > 0 ? '...' : '') + snippet + (end < page.text.length ? '...' : '')
+                        lesson: lessonNum,
+                        topic: topicNum,
+                        name: topic.name,
+                        snippet: '...' + snippet + '...',
+                        startPage: topic.start_page
                     });
                 }
             }
@@ -538,28 +532,18 @@ class YogaApp {
             resultsContainer.innerHTML = '<p style="padding: 1rem; color: #666;">Ничего не найдено</p>';
         } else {
             resultsContainer.innerHTML = results.slice(0, 50).map(result => `
-                <div class="search-result-item" onclick="app.loadSearchResult('${result.sectionKey}', ${result.pageIndex})">
-                    <h4>Урок ${result.lesson > 0 ? result.lesson : ''}${result.lesson > 0 ? ', Тема ' + result.topic : ''} - ${result.name}</h4>
-                    <div class="snippet">${result.snippet}</div>
-                    <div style="font-size: 0.8rem; color: #999; margin-top: 0.3rem;">Страница ${result.page}</div>
+                <div class="list-item" onclick="app.loadTopic('${result.lesson}', '${result.topic}')">
+                    <div class="list-item-info">
+                        <div class="list-item-title">Урок ${result.lesson}, Тема ${result.topic}: ${result.name}</div>
+                        <div class="list-item-subtitle" style="font-size: 0.85rem; color: #666;">${result.snippet}</div>
+                    </div>
                 </div>
             `).join('');
         }
     }
 
     loadSearchResult(sectionKey, pageIndex) {
-        if (sectionKey === 'front') {
-            // Show front matter page
-            const page = this.data.front_matter.pages[pageIndex];
-            if (page) {
-                this.renderFrontMatterPage(page);
-            }
-        } else {
-            const section = this.data.sections[sectionKey];
-            if (section) {
-                this.renderPage(section, pageIndex);
-            }
-        }
+        // Handled by loadTopic now
         this.closeModal('searchModal');
     }
 
@@ -583,7 +567,12 @@ class YogaApp {
     showWelcomePage() {
         const contentArea = document.getElementById('contentArea');
         const lessonsCount = Object.keys(this.data.lessons).length;
-        const topicsCount = Object.keys(this.data.sections).length;
+        
+        // Count total topics from lessons structure
+        let topicsCount = 0;
+        for (const lesson of Object.values(this.data.lessons)) {
+            topicsCount += Object.keys(lesson.topics).length;
+        }
         
         contentArea.innerHTML = `
             <div class="page-header">
