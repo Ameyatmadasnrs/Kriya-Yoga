@@ -16,14 +16,54 @@
                 <div class="header-actions">
                     <div class="theme-toggle-container">
                         <button id="themeToggle" class="theme-btn">
-                            <span class="normal-only">☀ Обычный режим</span>
-                            <span class="vedic-only">ॐ Ведический режим</span>
+                            <span class="theme-btn-icon">
+                                <svg class="normal-only" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                                <svg class="vedic-only" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"></path>
+                                </svg>
+                            </span>
+                            <span class="theme-btn-text">
+                                <span class="normal-only">Обычный режим</span>
+                                <span class="vedic-only">Ведический режим</span>
+                            </span>
                         </button>
                     </div>
-                    <button class="icon-btn" id="searchBtn" title="Поиск">🔍</button>
-                    <button class="icon-btn" id="bookmarksBtn" title="Закладки">🔖</button>
-                    <button class="icon-btn" id="favoritesBtn" title="Избранное">❤️</button>
-                    <button class="icon-btn" id="progressBtn" title="Прогресс">📊</button>
+                    <button class="icon-btn" id="searchBtn" title="Поиск">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <span class="emoji-fallback">🔍</span>
+                    </button>
+                    <button class="icon-btn" id="bookmarksBtn" title="Закладки">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span class="emoji-fallback">🔖</span>
+                    </button>
+                    <button class="icon-btn" id="favoritesBtn" title="Избранное">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                        </svg>
+                        <span class="emoji-fallback">❤️</span>
+                    </button>
+                    <button class="icon-btn" id="progressBtn" title="Прогресс">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span class="emoji-fallback">📊</span>
+                    </button>
                 </div>
             </div>
         </header>
@@ -45,7 +85,7 @@
         <div class="modal" id="searchModal">
             <div class="modal-content search-modal">
                 <span class="close-btn" id="closeSearch">&times;</span>
-                <h2>🔍 Поиск по тексту</h2>
+                <h2>Поиск по тексту</h2>
                 <input type="text" id="searchInput" placeholder="Введите поисковый запрос..." class="search-input">
                 <div id="searchResults" class="search-results"></div>
             </div>
@@ -55,7 +95,7 @@
         <div class="modal" id="bookmarksModal">
             <div class="modal-content">
                 <span class="close-btn" id="closeBookmarks">&times;</span>
-                <h2>🔖 Закладки</h2>
+                <h2>Закладки</h2>
                 <div id="bookmarksList" class="list-container"></div>
             </div>
         </div>
@@ -64,7 +104,7 @@
         <div class="modal" id="favoritesModal">
             <div class="modal-content">
                 <span class="close-btn" id="closeFavorites">&times;</span>
-                <h2>❤️ Избранное</h2>
+                <h2>Избранное</h2>
                 <div id="favoritesList" class="list-container"></div>
             </div>
         </div>
@@ -73,7 +113,7 @@
         <div class="modal" id="progressModal">
             <div class="modal-content progress-modal">
                 <span class="close-btn" id="closeProgress">&times;</span>
-                <h2>📊 Прогресс обучения</h2>
+                <h2>Прогресс обучения</h2>
                 <div id="progressContent" class="progress-content"></div>
             </div>
         </div>
