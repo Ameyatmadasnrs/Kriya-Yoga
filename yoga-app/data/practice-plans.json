@@ -1,0 +1,692 @@
+{
+  "1": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "53 минуты",
+        "items": [
+          {"practice": "Джала нети", "reps": "–", "minutes": "4"},
+          {"practice": "Вращение лодыжкой", "reps": "10 в каждую сторону", "minutes": "2"},
+          {"practice": "Полубабочка", "reps": "50 каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Уттханасана", "reps": "10 раз", "minutes": "3"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "3"},
+          {"practice": "«Вращение мельницы»", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Динамическое закручивание позвоночника", "reps": "20 раз", "minutes": "3"},
+          {"practice": "Движение шеи", "reps": "10 раз 1 стадия, 10 раз 2 стадия, 10 раз 3 стадия", "minutes": "10"},
+          {"practice": "Наукасана", "reps": "3 цикла", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Дыхание", "reps": "–", "minutes": "4"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "0,5 часа",
+        "items": [
+          {"practice": "Джала нети", "reps": "–", "minutes": "4"},
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "6 в каждую сторону", "minutes": "2"},
+          {"practice": "Уттханасана", "reps": "6 циклов", "minutes": "2"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "2"},
+          {"practice": "Динамическое закручивание позвоночника", "reps": "15 раз", "minutes": "2"},
+          {"practice": "Наукасана", "reps": "3 цикла", "minutes": "4"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "7"},
+          {"practice": "Дыхание", "reps": "–", "minutes": "5"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "15 минут",
+        "items": [
+          {"practice": "Джала нети", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "2"},
+          {"practice": "Динамическое закручивание позвоночника", "reps": "15 раз", "minutes": "2"},
+          {"practice": "Наукасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Дыхание", "reps": "–", "minutes": "3"}
+        ]
+      }
+    ]
+  },
+  "2": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Вращение лодыжкой", "reps": "10 в каждую сторону", "minutes": "2"},
+          {"practice": "Полубабочка", "reps": "50 каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Уттханасана", "reps": "–", "minutes": "3"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "3"},
+          {"practice": "Вращение мельницы", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Динамичное закручивание позвоночника", "reps": "20 раз", "minutes": "3"},
+          {"practice": "Движение шеи", "reps": "–", "minutes": "3"},
+          {"practice": "Сайтхалиасана", "reps": "–", "minutes": "5"},
+          {"practice": "Марджариасана", "reps": "25 циклов", "minutes": "5"},
+          {"practice": "Самавета пранаяма", "reps": "–", "minutes": "13"},
+          {"practice": "Наукасана", "reps": "3 цикла", "minutes": "4"},
+          {"practice": "Шавасана", "reps": "В полном объёме", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "2"},
+          {"practice": "Динамичное закручивание позвоночника", "reps": "–", "minutes": "3"},
+          {"practice": "Движение шеи", "reps": "2 цикла", "minutes": "4"},
+          {"practice": "Сайтхалиасана", "reps": "–", "minutes": "3"},
+          {"practice": "Марджариасана", "reps": "–", "minutes": "3"},
+          {"practice": "Самавета пранаяма", "reps": "15 циклов", "minutes": "7"},
+          {"practice": "Наукасана", "reps": "–", "minutes": "3"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "15 минут",
+        "items": [
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Сайтхалиасана", "reps": "–", "minutes": "3"},
+          {"practice": "Марджариасана", "reps": "10 циклов", "minutes": "2"},
+          {"practice": "Наукасана", "reps": "2 цикла", "minutes": "3"},
+          {"practice": "Самавета пранаяма", "reps": "в сукхасане или ваджрасане", "minutes": "5"}
+        ]
+      }
+    ]
+  },
+  "3": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Полубабочка", "reps": "50 каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "3"},
+          {"practice": "Паванмуктасана", "reps": "3 раза каждая стадия", "minutes": "5"},
+          {"practice": "Симха крийя", "reps": "–", "minutes": "3"},
+          {"practice": "Динамичное закручивание позвоночника", "reps": "20 циклов", "minutes": "2"},
+          {"practice": "Сайтхалиасана", "reps": "–", "minutes": "4"},
+          {"practice": "Ардха бхуджангасана", "reps": "3 раза", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "4"},
+          {"practice": "Марджариасана", "reps": "15 циклов", "minutes": "3"},
+          {"practice": "Наукасана", "reps": "3 цикла", "minutes": "4"},
+          {"practice": "Самавета пранаяма", "reps": "–", "minutes": "5"},
+          {"practice": "Нади шодхана – стадия 1", "reps": "–", "minutes": "8"},
+          {"practice": "Осознание тела", "reps": "–", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "10 в каждую сторону", "minutes": "3"},
+          {"practice": "Паванмуктасана", "reps": "2 раза каждая стадия", "minutes": "4"},
+          {"practice": "Симха крийя", "reps": "–", "minutes": "2"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха бхуджангасана", "reps": "2 раза", "minutes": "2"},
+          {"practice": "Нади шодхана – стадия 1", "reps": "–", "minutes": "4"},
+          {"practice": "Осознание тела", "reps": "–", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "15 минут",
+        "items": [
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Паванмуктасана", "reps": "2 раза каждая стадия", "minutes": "3"},
+          {"practice": "Симха крийя", "reps": "–", "minutes": "1"},
+          {"practice": "Ардха бхуджангасана", "reps": "2 раза", "minutes": "2"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – стадия 1", "reps": "–", "minutes": "4"}
+        ]
+      }
+    ]
+  },
+  "4": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Полубабочка", "reps": "50 каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 в каждую сторону", "minutes": "2"},
+          {"practice": "Симха крийя", "reps": "–", "minutes": "3"},
+          {"practice": "Марджариасана", "reps": "15 раз", "minutes": "3"},
+          {"practice": "Бхуджангасана или ардха бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Паванмуктасана", "reps": "3 раза каждая стадия", "minutes": "5"},
+          {"practice": "Сарпасана", "reps": "3 раза", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанк-бхуджангасана", "reps": "–", "minutes": "2"},
+          {"practice": "Меру вакрасана", "reps": "2 раза каждая сторона", "minutes": "3"},
+          {"practice": "Наукасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этап 1", "reps": "–", "minutes": "7"},
+          {"practice": "Нади шодхана – этап 2", "reps": "–", "minutes": "7"},
+          {"practice": "Практика медитации", "reps": "–", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Полубабочка", "reps": "50 каждой ногой", "minutes": "2"},
+          {"practice": "Бхуджангасана или ардха бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанк-бхуджангасана", "reps": "–", "minutes": "2"},
+          {"practice": "Сарпасана", "reps": "2 раза", "minutes": "2"},
+          {"practice": "Марджариасана", "reps": "15 раз", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раз каждая сторона", "minutes": "2"},
+          {"practice": "Наукасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Нади шодхана – этап 1", "reps": "–", "minutes": "5"},
+          {"practice": "Нади шодхана – этап 2", "reps": "–", "minutes": "5"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "15 минут",
+        "items": [
+          {"practice": "Полубабочка", "reps": "35 каждой ногой", "minutes": "2"},
+          {"practice": "Бхуджангасана или ардха бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанк-бхуджангасана", "reps": "–", "minutes": "2"},
+          {"practice": "Сарпасана", "reps": "2 раза", "minutes": "2"},
+          {"practice": "Наукасана", "reps": "2 раза", "minutes": "3"}
+        ]
+      }
+    ]
+  },
+  "5": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "Начать с 3", "minutes": "6"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "50 раз каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "3"},
+          {"practice": "Марджариасана", "reps": "15 раз", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Наукасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "15"},
+          {"practice": "Медитация (анулома вилома и прана шуддхи)", "reps": "–", "minutes": "12"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "Начать с 3", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "50 раз каждой ногой", "minutes": "2"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Марджариасана", "reps": "15 раз", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раза в каждую сторону", "minutes": "2"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "12"},
+          {"practice": "Медитация (анулома вилома и прана шуддхи)", "reps": "–", "minutes": "12"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "Начать с 3", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 раз каждой ногой", "minutes": "2"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раза в каждую сторону", "minutes": "2"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "12"}
+        ]
+      }
+    ]
+  },
+  "6": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "8"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Полубабочка", "reps": "50 раз каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "3"},
+          {"practice": "Полная бабочка", "reps": "–", "minutes": "3"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "3"},
+          {"practice": "Колка дров", "reps": "–", "minutes": "3"},
+          {"practice": "Вайю нишкасана", "reps": "10 циклов", "minutes": "3"},
+          {"practice": "Уттан падасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Вьягхрасана", "reps": "–", "minutes": "4"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "15"},
+          {"practice": "Медитация (анулома вилома, прана шуддхи, уджайи, кхечари)", "reps": "–", "minutes": "23"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "7"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 раз каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "2"},
+          {"practice": "Полная бабочка", "reps": "–", "minutes": "2"},
+          {"practice": "Уттан падасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Вьягхрасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раз в каждую сторону", "minutes": "2"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "10"},
+          {"practice": "Медитация (анулома вилома, прана шуддхи, уджайи, кхечари)", "reps": "–", "minutes": "14"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "6"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 раз каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "2"},
+          {"practice": "Полная бабочка", "reps": "–", "minutes": "2"},
+          {"practice": "Уттан падасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Вьягхрасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "7"},
+          {"practice": "Медитация (анулома вилома, прана шуддхи, уджайи, кхечари)", "reps": "–", "minutes": "11"}
+        ]
+      },
+      {
+        "name": "Программа 4",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "6"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уттан падасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 1 и 2", "reps": "–", "minutes": "9"}
+        ]
+      }
+    ]
+  },
+  "7": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Полубабочка", "reps": "50 раз каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "3"},
+          {"practice": "Полная бабочка", "reps": "–", "minutes": "3"},
+          {"practice": "Вороний шаг", "reps": "–", "minutes": "3"},
+          {"practice": "Колка дров", "reps": "–", "minutes": "3"},
+          {"practice": "Вайю нишкасана", "reps": "10 циклов", "minutes": "3"},
+          {"practice": "Уттан падасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана (1, 2, подг. к 3)", "reps": "–", "minutes": "15"},
+          {"practice": "Медитация (Кайя стхаирьям, анулома вилома, прана шуддхи)", "reps": "–", "minutes": "25"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "7"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 раз каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "2"},
+          {"practice": "Полная бабочка", "reps": "–", "minutes": "2"},
+          {"practice": "Уттан падасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раза в каждую сторону", "minutes": "2"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана (1, 2, подг. к 3)", "reps": "–", "minutes": "12"},
+          {"practice": "Медитация (Кайя стхаирьям, анулома вилома, прана шуддхи)", "reps": "–", "minutes": "15"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "6"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 раз каждой ногой", "minutes": "2"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "2"},
+          {"practice": "Полная бабочка", "reps": "–", "minutes": "2"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раз в каждую сторону", "minutes": "2"},
+          {"practice": "Нади шодхана (1, 2, подг. к 3)", "reps": "–", "minutes": "12"},
+          {"practice": "Кайя стхаирьям", "reps": "–", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 4",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "6"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "1 раз в каждую сторону", "minutes": "3"},
+          {"practice": "Нади шодхана (1, 2, подг. к 3)", "reps": "–", "minutes": "12"}
+        ]
+      }
+    ]
+  },
+  "8": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Полубабочка", "reps": "50 раз каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "15"},
+          {"practice": "Тратака", "reps": "–", "minutes": "30"},
+          {"practice": "Агочари мудра", "reps": "–", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Полубабочка", "reps": "35 раз каждой ногой", "minutes": "3"},
+          {"practice": "Вращение колена", "reps": "10 раз в каждую сторону", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "12"},
+          {"practice": "Тратака", "reps": "–", "minutes": "20"},
+          {"practice": "Агочари мудра", "reps": "–", "minutes": "8"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "11"},
+          {"practice": "Тратака", "reps": "–", "minutes": "20"}
+        ]
+      },
+      {
+        "name": "Программа 4",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "11"},
+          {"practice": "Агочари мудра", "reps": "–", "minutes": "5"}
+        ]
+      }
+    ]
+  },
+  "9": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана или ардха шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанк-бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "15"},
+          {"practice": "Тратака, этап 2", "reps": "–", "minutes": "30"},
+          {"practice": "Шамбхави мудра", "reps": "–", "minutes": "10"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана или ардха шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "15"},
+          {"practice": "Тратака, этап 2", "reps": "–", "minutes": "20"},
+          {"practice": "Шамбхави мудра", "reps": "–", "minutes": "5"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана или ардха шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "8"},
+          {"practice": "Тратака, этап 2", "reps": "–", "minutes": "20"}
+        ]
+      },
+      {
+        "name": "Программа 4",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана или ардха шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Меру вакрасана", "reps": "2 раза в каждую сторону", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3", "reps": "–", "minutes": "10"}
+        ]
+      }
+    ]
+  },
+  "10": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанк-бхуджангасана", "reps": "–", "minutes": "2"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "15"},
+          {"practice": "Бхучари мудра", "reps": "–", "minutes": "9"},
+          {"practice": "Тратака, этапы 1, 2 или 3", "reps": "–", "minutes": "30"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "4"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "14"},
+          {"practice": "Бхучари мудра", "reps": "–", "minutes": "5"},
+          {"practice": "Тратака, этапы 1, 2 или 3", "reps": "–", "minutes": "20"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "2"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "8"},
+          {"practice": "Тратака, этапы 1, 2 или 3", "reps": "–", "minutes": "18"}
+        ]
+      },
+      {
+        "name": "Программа 4",
+        "duration": "30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "5"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "8"}
+        ]
+      }
+    ]
+  },
+  "11": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шашанк-бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Уштрасана", "reps": "2 раза", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "1 раз каждым способом", "minutes": "4"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "19"},
+          {"practice": "Тратака, этапы 1, 2 или 3", "reps": "–", "minutes": "30"},
+          {"practice": "Размышление над стихотворением", "reps": "–", "minutes": "5"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "1 раз каждым способом", "minutes": "4"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "14"},
+          {"practice": "Тратака, этапы 1, 2 или 3", "reps": "–", "minutes": "20"},
+          {"practice": "Размышление над стихотворением", "reps": "–", "minutes": "5"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "1 раз каждым способом", "minutes": "3"},
+          {"practice": "Нади шодхана – этапы 2 и 3 (новое соотн.)", "reps": "–", "minutes": "10"},
+          {"practice": "Тратака, этапы 1, 2 или 3", "reps": "–", "minutes": "15"}
+        ]
+      }
+    ]
+  },
+  "12": {
+    "programs": [
+      {
+        "name": "Программа 1",
+        "duration": "1 час 30 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "10"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "4"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Триконасана", "reps": "3 раза каждую часть", "minutes": "10"},
+          {"practice": "Двиконасана", "reps": "5 циклов", "minutes": "3"},
+          {"practice": "Доласана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "4"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этап 4", "reps": "–", "minutes": "14"},
+          {"practice": "Повторение АУМ с тратакой", "reps": "–", "minutes": "30"}
+        ]
+      },
+      {
+        "name": "Программа 2",
+        "duration": "1 час",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Бхуджангасана", "reps": "–", "minutes": "3"},
+          {"practice": "Шалабхасана", "reps": "3 цикла", "minutes": "3"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Триконасана", "reps": "3 раза каждую часть", "minutes": "9"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "4"},
+          {"practice": "Нади шодхана – этап 4", "reps": "–", "minutes": "12"},
+          {"practice": "Повторение АУМ с тратакой", "reps": "–", "minutes": "18"}
+        ]
+      },
+      {
+        "name": "Программа 3",
+        "duration": "45 минут",
+        "items": [
+          {"practice": "Сурья намаскар", "reps": "На ваш выбор", "minutes": "5"},
+          {"practice": "Шавасана", "reps": "–", "minutes": "3"},
+          {"practice": "Триконасана", "reps": "2 раза каждую часть", "minutes": "6"},
+          {"practice": "Шашанкасана", "reps": "–", "minutes": "3"},
+          {"practice": "Ардха матсиендрасана", "reps": "–", "minutes": "3"},
+          {"practice": "Нади шодхана – этап 4", "reps": "–", "minutes": "10"},
+          {"practice": "Повторение АУМ", "reps": "–", "minutes": "15"}
+        ]
+      }
+    ]
+  }
+}

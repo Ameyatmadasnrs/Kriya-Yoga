@@ -17,12 +17,14 @@ class YogaApp {
         this.lastVisitDate = null;
         this.achievements = [];
         this.expandedLessons = new Set();
+        this.theme = localStorage.getItem('yogaApp_theme') || 'normal';
 
         this.init();
     }
 
     async init() {
         await this.loadData();
+        this.applyTheme();
         this.setupEventListeners();
         this.loadUserData();
         this.checkDailyStreak();
@@ -52,6 +54,16 @@ class YogaApp {
                 this.imagePositions = await posResponse.json();
             } else {
                 console.warn('Image positions not found via fetch');
+            }
+
+            // Load practice plans
+            try {
+                const plansResponse = await fetch('data/practice-plans.json');
+                if (plansResponse.ok) {
+                    this.practicePlans = await plansResponse.json();
+                }
+            } catch (e) {
+                console.warn('Practice plans not found');
             }
 
             if (this.data) {
@@ -150,6 +162,9 @@ class YogaApp {
     }
 
     setupEventListeners() {
+        // Theme toggle
+        document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+
         // Menu toggle
         document.getElementById('menuToggle').addEventListener('click', () => this.toggleSidebar());
         
@@ -199,6 +214,20 @@ class YogaApp {
             mainContent.classList.toggle('expanded');
         }
         this.sidebarOpen = !sidebar.classList.contains('collapsed') && !sidebar.classList.contains('show');
+    }
+
+    toggleTheme() {
+        this.theme = this.theme === 'normal' ? 'vedic' : 'normal';
+        localStorage.setItem('yogaApp_theme', this.theme);
+        this.applyTheme();
+    }
+
+    applyTheme() {
+        if (this.theme === 'vedic') {
+            document.body.classList.add('vedic-theme');
+        } else {
+            document.body.classList.remove('vedic-theme');
+        }
     }
 
     renderLessonsList() {
@@ -292,8 +321,16 @@ class YogaApp {
             String(img.lesson) === String(lessonNum) && String(img.topic) === String(topicNum)
         );
 
-        // Format the text content with smart image placement based on PDF layout
-        const formattedContent = this.formatContent(topic.text, topicImages, topic.start_page);
+        // Check if this is a practice program topic
+        let formattedContent = '';
+        const isPracticePlan = topic.name.toLowerCase().includes('программа ежедневных занятий');
+
+        if (isPracticePlan && this.practicePlans && this.practicePlans[lessonNum]) {
+            formattedContent = this.renderPracticePlanHtml(lessonNum);
+        } else {
+            // Format the text content with smart image placement based on PDF layout
+            formattedContent = this.formatContent(topic.text, topicImages, topic.start_page);
+        }
 
         const isBookmarked = this.bookmarks.some(b => b.lesson === lessonNum && b.topic === topicNum);
         const isFavorite = this.favorites.some(f => f.lesson === lessonNum && f.topic === topicNum);
@@ -364,6 +401,70 @@ class YogaApp {
                 this.loadTopic(nextLessonNum.toString(), firstTopic.toString());
             }
         }
+    }
+
+    /**
+     * Renders structured practice plan as a visual UI
+     */
+    renderPracticePlanHtml(lessonNum) {
+        const lessonPlan = this.practicePlans[lessonNum];
+        if (!lessonPlan) return '<p>Программа занятий не найдена.</p>';
+
+        let html = `
+            <div class="practice-plan-container">
+                <div class="practice-intro">
+                    На этом этапе крайне важно придерживаться регулярной практики.
+                    Ниже приведены структурированные программы занятий, составленные на основе рекомендаций из книги.
+                </div>
+        `;
+
+        lessonPlan.programs.forEach((prog, idx) => {
+            html += `
+                <div class="practice-program-card">
+                    <div class="program-header">
+                        <h3>${prog.name}</h3>
+                        <span class="program-duration">⏱ ${prog.duration}</span>
+                    </div>
+                    <div class="practice-table-wrapper">
+                        <table class="practice-table">
+                            <thead>
+                                <tr>
+                                    <th>Практика</th>
+                                    <th>Повторения</th>
+                                    <th>Мин.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+            `;
+
+            prog.items.forEach((item, itemIdx) => {
+                html += `
+                    <tr class="practice-row" data-duration="${item.minutes}">
+                        <td class="practice-name">
+                            <span class="practice-order">${String(itemIdx + 1).padStart(2, '0')}</span>
+                            ${item.practice}
+                        </td>
+                        <td class="practice-reps">${item.reps}</td>
+                        <td class="practice-mins">${item.minutes}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="program-actions">
+                        <button class="start-practice-btn" onclick="alert('Функция таймера будет добавлена в следующем обновлении!')">
+                            🧘 Начать практику
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        return html;
     }
 
     /**

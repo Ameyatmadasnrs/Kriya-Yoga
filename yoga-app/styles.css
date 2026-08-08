@@ -622,3 +622,278 @@ body {
     text-transform: uppercase;
     letter-spacing: 1px;
 }
+
+/* Vedic Theme (Ведический режим) */
+body.vedic-theme {
+    --primary-color: #5d101d; /* Burgundy */
+    --primary-light: #8d2b3c;
+    --primary-dark: #3a0812;
+    --accent-color: #c5a059; /* Muted Gold */
+    --bg-color: #f4ece1; /* Parchment */
+    --sidebar-bg: #2d1a1e; /* Dark Wine */
+    --text-color: #2c1e11;
+    --text-light: #6b4f3b;
+    --border-color: #d1b89a;
+    --card-bg: #fdfaf5;
+    --success-color: #4a6741;
+    --shadow: 0 4px 15px rgba(93, 16, 29, 0.1);
+}
+
+body.vedic-theme {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect fill="%23f4ece1" width="100" height="100"/><path d="M0 0l100 100M100 0L0 100" stroke="%23ebdccb" stroke-width="0.5" opacity="0.3"/></svg>');
+}
+
+body.vedic-theme #contentArea {
+    border: 1px solid var(--border-color);
+    position: relative;
+    background-color: var(--card-bg);
+}
+
+body.vedic-theme #contentArea::before {
+    content: "ॐ";
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 1.5rem;
+    color: var(--accent-color);
+    opacity: 0.4;
+}
+
+body.vedic-theme #contentArea::after {
+    content: "ॐ";
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: 1.5rem;
+    color: var(--accent-color);
+    opacity: 0.4;
+}
+
+body.vedic-theme .page-header {
+    border-bottom: 2px solid var(--accent-color);
+    text-align: center;
+    padding-bottom: 2rem;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="40" viewBox="0 0 100 40"><path d="M50 5c-5 0-9 5-9 10s4 10 9 10 9-5 9-10-4-10-9-10zm0 2c3.9 0 7 3.1 7 8s-3.1 7-7 7-7-3.1-7-8 3.1-8 7-8z" fill="%23c5a059" opacity="0.3"/></svg>');
+    background-repeat: no-repeat;
+    background-position: center bottom;
+}
+
+body.vedic-theme .page-header h1 {
+    font-family: 'Times New Roman', serif;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+body.vedic-theme .page-break-marker::after {
+    background: var(--card-bg);
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+body.vedic-theme .header {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border-bottom: 2px solid var(--accent-color);
+}
+
+body.vedic-theme .nav-btn {
+    border: 1px solid var(--accent-color);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    background: var(--primary-color);
+}
+
+body.vedic-theme .sidebar {
+    border-right: 1px solid var(--accent-color);
+}
+
+body.vedic-theme .topic-item.active {
+    background: rgba(197, 160, 89, 0.15);
+    color: var(--accent-color);
+    font-weight: bold;
+}
+
+/* Practice Plan UI */
+.practice-plan-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.practice-intro {
+    font-style: italic;
+    color: var(--text-light);
+    border-left: 4px solid var(--accent-color);
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+}
+
+.practice-program-card {
+    background: var(--bg-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.program-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 0.5rem;
+}
+
+.program-header h3 {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.program-duration {
+    font-weight: bold;
+    color: var(--accent-color);
+    background: var(--card-bg);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.practice-table-wrapper {
+    overflow-x: auto;
+}
+
+.practice-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.practice-table th {
+    text-align: left;
+    padding: 0.75rem;
+    background: rgba(0,0,0,0.05);
+    color: var(--primary-dark);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.practice-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    vertical-align: middle;
+}
+
+.practice-name {
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.practice-order {
+    font-size: 0.7rem;
+    background: var(--primary-color);
+    color: white;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.practice-reps {
+    font-size: 0.9rem;
+    color: var(--text-light);
+}
+
+.practice-mins {
+    font-weight: bold;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+.program-actions {
+    text-align: right;
+}
+
+.start-practice-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.start-practice-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* Mobile adjustments for practice plan */
+@media (max-width: 600px) {
+    .practice-table thead {
+        display: none;
+    }
+
+    .practice-row {
+        display: block;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .practice-table td {
+        display: block;
+        padding: 0.25rem 0;
+        border: none;
+        text-align: left;
+    }
+
+    .practice-mins::before {
+        content: "Время: ";
+        font-weight: normal;
+        color: var(--text-light);
+    }
+
+    .practice-reps::before {
+        content: "Повторения: ";
+        font-weight: normal;
+        color: var(--text-light);
+    }
+}
+
+/* Theme Toggle Button */
+.theme-toggle-container {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.theme-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.3s;
+}
+
+.theme-btn:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.vedic-only { display: none; }
+body.vedic-theme .vedic-only { display: inline; }
+body.vedic-theme .normal-only { display: none; }
