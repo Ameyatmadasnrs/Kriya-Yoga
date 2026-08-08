@@ -3,6 +3,7 @@ class YogaApp {
     constructor() {
         this.data = null;
         this.imageMap = [];
+        this.imagePositions = [];
         this.currentLesson = null;
         this.currentTopic = null;
         this.bookmarks = [];
@@ -39,12 +40,18 @@ class YogaApp {
                 console.warn('Book data not found via fetch');
             }
 
-            // Load image map
+            // Load image map (for general topic mapping)
             const imageMapResponse = await fetch('assets/images/image-map.json');
             if (imageMapResponse.ok) {
                 this.imageMap = await imageMapResponse.json();
+            }
+
+            // Load precise image positions
+            const posResponse = await fetch('data/image-positions.json');
+            if (posResponse.ok) {
+                this.imagePositions = await posResponse.json();
             } else {
-                console.warn('Image map not found via fetch');
+                console.warn('Image positions not found via fetch');
             }
 
             if (this.data) {
@@ -62,6 +69,7 @@ class YogaApp {
         // Check if data is embedded in a script tag (for local file access)
         const embeddedData = document.getElementById('embeddedBookData');
         const embeddedImageMap = document.getElementById('embeddedImageMap');
+        const embeddedImagePositions = document.getElementById('embeddedImagePositions');
 
         if (embeddedData && embeddedData.textContent) {
             try {
@@ -76,10 +84,13 @@ class YogaApp {
         if (embeddedImageMap && embeddedImageMap.textContent) {
             try {
                 this.imageMap = JSON.parse(embeddedImageMap.textContent);
-                console.log('Loaded embedded image map successfully');
-            } catch (e) {
-                console.error('Error parsing embedded image map:', e);
-            }
+            } catch (e) {}
+        }
+
+        if (embeddedImagePositions && embeddedImagePositions.textContent) {
+            try {
+                this.imagePositions = JSON.parse(embeddedImagePositions.textContent);
+            } catch (e) {}
         }
 
         if (!this.data) {
@@ -356,101 +367,94 @@ class YogaApp {
     }
 
     /**
-     * Formats book text into HTML, dynamically inserting images from image-map.json
-     * based on PDF page positions instead of inline markers.
+     * Formats book text into HTML, dynamically inserting images from image-positions.json
+     * using text anchors for precise placement.
      */
     formatContent(text, topicImages = [], startPage = 0) {
         if (!text) return '';
 
-        // Group images by page for efficient placement
-        const imagesByPage = {};
-        topicImages.forEach(img => {
-            const page = parseInt(img.pdf_page);
-            if (!imagesByPage[page]) imagesByPage[page] = [];
-            imagesByPage[page].push(img);
-        });
+        // Get precise positions for images in this topic
+        const relevantPositions = this.imagePositions.filter(pos =>
+            String(pos.lesson) === String(this.currentLesson) &&
+            String(pos.topic) === String(this.currentTopic)
+        );
 
         // Split text by PDF page markers: \n(\d+)\n
-        // We capture the page number to identify where each text block belongs
         const parts = text.split(/\n(\d+)\n/);
 
         let htmlResult = '';
         let currentPage = parseInt(startPage);
+        let placedImages = new Set();
 
         for (let i = 0; i < parts.length; i++) {
             if (i % 2 === 0) {
                 // This is a block of text belonging to currentPage
-                const segmentText = parts[i];
+                let segmentText = parts[i];
+                if (!segmentText.trim()) continue;
 
-                if (segmentText.trim()) {
-                    // 1. Insert images associated with this PDF page at the top of the block
-                    if (imagesByPage[currentPage]) {
-                        imagesByPage[currentPage].forEach(img => {
-                            htmlResult += this.generateImageHtml(img);
-                        });
-                        // Mark as used
-                        delete imagesByPage[currentPage];
+                // Split segment into paragraphs
+                let paragraphs = segmentText.split(/\n\n+/);
+
+                paragraphs.forEach(p => {
+                    p = p.trim();
+                    if (!p) return;
+
+                    // Header detection
+                    const isHeader = p.match(/^[А-ЯЁ\d\.\s\-]+$/) && p.length < 100 && p === p.toUpperCase();
+
+                    // Check if any image belongs here
+                    let imagesToInsert = [];
+                    const normalize = (t) => t.replace(/[^а-яёa-z0-9]/gi, '').toLowerCase();
+                    const normalizedP = normalize(p);
+
+                    relevantPositions.forEach(pos => {
+                        if (!placedImages.has(pos.image_filename)) {
+                            const normalizedAnchor = normalize(pos.anchor_text);
+                            // Search for anchor text in the paragraph
+                            if (normalizedP.includes(normalizedAnchor)) {
+                                imagesToInsert.push(pos);
+                                placedImages.add(pos.image_filename);
+                            }
+                        }
+                    });
+
+                    if (isHeader) {
+                        htmlResult += `<h3>${p}</h3>`;
+                    } else {
+                        let formattedText = p.replace(/\n/g, '<br>');
+                        htmlResult += `<p>${formattedText}</p>`;
                     }
 
-                    // 2. Convert raw text to formatted paragraphs/headers
-                    htmlResult += this.processTextSegment(segmentText);
-                }
+                    // Insert images AFTER the paragraph containing their anchor
+                    imagesToInsert.forEach(pos => {
+                        htmlResult += this.generateImageHtmlFromPos(pos);
+                    });
+                });
             } else {
-                // This is a page number marker (\d+)
+                // Page marker
                 const pageNum = parseInt(parts[i]);
-
-                // Optional: Render a subtle divider for the original PDF page break
                 htmlResult += `<div class="page-break-marker" title="PDF Page ${pageNum}"></div>`;
-
-                // The next text block will belong to the page following this marker
                 currentPage = pageNum + 1;
             }
         }
 
-        // Safety: Insert any images that weren't placed (e.g. if page numbers didn't match perfectly)
-        Object.keys(imagesByPage).forEach(page => {
-            imagesByPage[page].forEach(img => {
-                htmlResult += this.generateImageHtml(img);
-            });
+        // Safety: Insert any images that were matched to this topic but NOT placed via anchors
+        relevantPositions.forEach(pos => {
+            if (!placedImages.has(pos.image_filename)) {
+                htmlResult += this.generateImageHtmlFromPos(pos);
+                placedImages.add(pos.image_filename);
+            }
         });
 
         return htmlResult;
     }
 
     /**
-     * Processes a raw text segment into HTML paragraphs and headers.
+     * Generates HTML for an image from position metadata
      */
-    processTextSegment(text) {
-        if (!text) return '';
-
-        // Split by double newlines for paragraph separation
-        let paragraphs = text.split(/\n\n+/);
-
-        return paragraphs.map(p => {
-            p = p.trim();
-            if (!p) return '';
-
-            // Clean up any legacy image markers that might have leaked into data (though forbidden)
-            p = p.replace(/\[\[IMG:[^\]]+\]\]/g, '');
-            if (!p) return '';
-
-            // Header detection: ALL CAPS, short length
-            if (p.match(/^[А-ЯЁ\d\.\s\-]+$/) && p.length < 100 && p === p.toUpperCase()) {
-                return `<h3>${p}</h3>`;
-            }
-
-            // Normal paragraph: handle internal newlines from PDF export as line breaks
-            let formattedText = p.replace(/\n/g, '<br>');
-            return `<p>${formattedText}</p>`;
-        }).filter(p => p).join('');
-    }
-
-    /**
-     * Generates HTML for an image from image-map.json
-     */
-    generateImageHtml(img) {
-        const filename = img.image_filename;
-        const caption = img.topic_title || '';
+    generateImageHtmlFromPos(pos) {
+        const filename = pos.image_filename;
+        const caption = pos.caption || '';
         return `
             <div class="topic-image-container">
                 <img src="assets/images/${filename}"

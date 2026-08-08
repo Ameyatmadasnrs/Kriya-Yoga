@@ -1,0 +1,594 @@
+[
+  {
+    "image_filename": "img001.jpg",
+    "pdf_page": 1,
+    "lesson": 1,
+    "topic": 1,
+    "anchor_text": "Урок 1. Крийя йога. Введение",
+    "caption": "Логотип: Международная Федерация Йоги"
+  },
+  {
+    "image_filename": "img002.jpg",
+    "pdf_page": 35,
+    "lesson": 1,
+    "topic": 2,
+    "anchor_text": "как показано на рисунке.",
+    "caption": "Техника выполнения Джала Нети"
+  },
+  {
+    "image_filename": "img003.jpg",
+    "pdf_page": 41,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "как мож\nно ближе к паху.",
+    "caption": "Вращение лодыжкой"
+  },
+  {
+    "image_filename": "img004.jpg",
+    "pdf_page": 43,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "за колено согнутой ноги.",
+    "caption": "Вращение колена"
+  },
+  {
+    "image_filename": "img005.jpg",
+    "pdf_page": 42,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "Положите левую руку на",
+    "caption": "Полубабочка"
+  },
+  {
+    "image_filename": "img006.jpg",
+    "pdf_page": 45,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "ладони\nлежат на коленях.",
+    "caption": "Вороний шаг"
+  },
+  {
+    "image_filename": "img007.jpg",
+    "pdf_page": 45,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "бой на высоте плеч.",
+    "caption": "Вращение мельницы"
+  },
+  {
+    "image_filename": "img008.jpg",
+    "pdf_page": 44,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "рукам\nсвободно свисать.",
+    "caption": "Уттханасана (приседание)"
+  },
+  {
+    "image_filename": "img009.jpg",
+    "pdf_page": 46,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "насколько вам удобно.",
+    "caption": "Динамическое закручивание позвоночника"
+  },
+  {
+    "image_filename": "img010.png",
+    "pdf_page": 47,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "Очень медленно наклоните",
+    "caption": "Движение шеи (стадия 1)"
+  },
+  {
+    "image_filename": "img011.jpg",
+    "pdf_page": 48,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "Медленно вращайте головой",
+    "caption": "Движение шеи (стадия 3)"
+  },
+  {
+    "image_filename": "img012.jpg",
+    "pdf_page": 74,
+    "lesson": 1,
+    "topic": 5,
+    "anchor_text": "больше,\nчем на 15 см.",
+    "caption": "Наукасана (поза лодки)"
+  },
+  {
+    "image_filename": "img013.jpg",
+    "pdf_page": 74,
+    "lesson": 1,
+    "topic": 5,
+    "anchor_text": "ноги, руки и плечи.",
+    "caption": "Наукасана (подготовительная фаза)"
+  },
+  {
+    "image_filename": "img014.jpg",
+    "pdf_page": 76,
+    "lesson": 1,
+    "topic": 5,
+    "anchor_text": "соприкосновение пола и ягодиц.",
+    "caption": "Шавасана (поза трупа)"
+  },
+  {
+    "image_filename": "img015.jpg",
+    "pdf_page": 110,
+    "lesson": 2,
+    "topic": 4,
+    "anchor_text": "Встаньте на колени.",
+    "caption": "Марджариасана (поза кошки)"
+  },
+  {
+    "image_filename": "img016.jpg",
+    "pdf_page": 112,
+    "lesson": 2,
+    "topic": 5,
+    "anchor_text": "Сядьте, вытянув ноги прямо",
+    "caption": "Сукхасана (удобная поза)"
+  },
+  {
+    "image_filename": "img017.jpg",
+    "pdf_page": 112,
+    "lesson": 2,
+    "topic": 5,
+    "anchor_text": "на пол свёрнутое одеяло.",
+    "caption": "Ваджрасана (поза молнии)"
+  },
+  {
+    "image_filename": "img018.jpg",
+    "pdf_page": 143,
+    "lesson": 3,
+    "topic": 1,
+    "anchor_text": "пальцами назад. Локти",
+    "caption": "Симха крийя (зевок льва)"
+  },
+  {
+    "image_filename": "img019.jpg",
+    "pdf_page": 143,
+    "lesson": 3,
+    "topic": 1,
+    "anchor_text": "откройте рот и вы",
+    "caption": "Симха крийя (вид сбоку)"
+  },
+  {
+    "image_filename": "img020.jpg",
+    "pdf_page": 148,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "Сядьте в ваджрасану (1).",
+    "caption": "Шашанкасана (исходное положение)"
+  },
+  {
+    "image_filename": "img021.jpg",
+    "pdf_page": 148,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "лежать на полу перед ко\nленями",
+    "caption": "Шашанкасана (конечное положение)"
+  },
+  {
+    "image_filename": "img022.jpg",
+    "pdf_page": 150,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "Заведите руки за спину,",
+    "caption": "Шашанкасана (вариант 1)"
+  },
+  {
+    "image_filename": "img023.jpg",
+    "pdf_page": 153,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "Теперь подтяните обе согнутые",
+    "caption": "Паванмуктасана (этап 3)"
+  },
+  {
+    "image_filename": "img024.jpg",
+    "pdf_page": 152,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "Согните правую ногу и подтяните",
+    "caption": "Паванмуктасана (этап 1)"
+  },
+  {
+    "image_filename": "img025.jpg",
+    "pdf_page": 156,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "верхняя часть предплечий",
+    "caption": "Ардха Бхуджангасана"
+  },
+  {
+    "image_filename": "img026.jpg",
+    "pdf_page": 157,
+    "lesson": 3,
+    "topic": 2,
+    "anchor_text": "подняты над землей.\nПри этом",
+    "caption": "Макарасана (поза крокодила)"
+  },
+  {
+    "image_filename": "img027.jpg",
+    "pdf_page": 175,
+    "lesson": 3,
+    "topic": 4,
+    "anchor_text": "прямо перед лицом.",
+    "caption": "Насагра мудра (вид спереди)"
+  },
+  {
+    "image_filename": "img028.jpg",
+    "pdf_page": 209,
+    "lesson": 4,
+    "topic": 2,
+    "anchor_text": "выпрямив\nноги и повернув ступни",
+    "caption": "Бхуджангасана (поза кобры)"
+  },
+  {
+    "image_filename": "img029.jpg",
+    "pdf_page": 215,
+    "lesson": 4,
+    "topic": 2,
+    "anchor_text": "шашанкасаны с руками,",
+    "caption": "Шашанк-Бхуджангасана"
+  },
+  {
+    "image_filename": "img030.jpg",
+    "pdf_page": 217,
+    "lesson": 4,
+    "topic": 2,
+    "anchor_text": "Сложите руки за спиной,",
+    "caption": "Сарпасана (поза змеи)"
+  },
+  {
+    "image_filename": "img031.jpg",
+    "pdf_page": 216,
+    "lesson": 4,
+    "topic": 2,
+    "anchor_text": "с пола и поставьте ее",
+    "caption": "Меру Вакрасана"
+  },
+  {
+    "image_filename": "img032.jpg",
+    "pdf_page": 270,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "это намаскар мудра.",
+    "caption": "Сурья Намаскар (Позиция 1)"
+  },
+  {
+    "image_filename": "img033.jpg",
+    "pdf_page": 271,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "держа их на ширине плеч.",
+    "caption": "Сурья Намаскар (Позиция 2)"
+  },
+  {
+    "image_filename": "img034.jpg",
+    "pdf_page": 275,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "между ладоня\nми. Одновременно",
+    "caption": "Сурья Намаскар (Позиция 4)"
+  },
+  {
+    "image_filename": "img035.jpg",
+    "pdf_page": 277,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "бы она располагалась между руками.",
+    "caption": "Сурья Намаскар (Позиция 5)"
+  },
+  {
+    "image_filename": "img036.jpg",
+    "pdf_page": 273,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "на пол спереди или\nпо бокам ступней.",
+    "caption": "Сурья Намаскар (Позиция 3)"
+  },
+  {
+    "image_filename": "img037.jpg",
+    "pdf_page": 278,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "Опустите тело к земле,",
+    "caption": "Сурья Намаскар (Позиция 6)"
+  },
+  {
+    "image_filename": "img038.jpg",
+    "pdf_page": 278,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "Опустите бёдра на пол.",
+    "caption": "Сурья Намаскар (Позиция 7)"
+  },
+  {
+    "image_filename": "img039.jpg",
+    "pdf_page": 324,
+    "lesson": 6,
+    "topic": 2,
+    "anchor_text": "живот как можно сильнее,",
+    "caption": "Агнисар крийя"
+  },
+  {
+    "image_filename": "img040.jpg",
+    "pdf_page": 331,
+    "lesson": 6,
+    "topic": 3,
+    "anchor_text": "Встаньте на колени, и примите",
+    "caption": "Уштрасана (поза верблюда)"
+  },
+  {
+    "image_filename": "img041.jpg",
+    "pdf_page": 335,
+    "lesson": 6,
+    "topic": 3,
+    "anchor_text": "вдохните как можно глубже.",
+    "caption": "Уттхан падасана"
+  },
+  {
+    "image_filename": "img042.jpg",
+    "pdf_page": 338,
+    "lesson": 6,
+    "topic": 3,
+    "anchor_text": "медленно отодвигайте колено",
+    "caption": "Вьягхрасана (поза тигра - вверх)"
+  },
+  {
+    "image_filename": "img043.jpg",
+    "pdf_page": 338,
+    "lesson": 6,
+    "topic": 3,
+    "anchor_text": "подтягивая бедро к груди.",
+    "caption": "Вьягхрасана (поза тигра - вниз)"
+  },
+  {
+    "image_filename": "img044.jpg",
+    "pdf_page": 342,
+    "lesson": 6,
+    "topic": 4,
+    "anchor_text": "как крылья бабочки.",
+    "caption": "Полная бабочка"
+  },
+  {
+    "image_filename": "img045.jpg",
+    "pdf_page": 343,
+    "lesson": 6,
+    "topic": 4,
+    "anchor_text": "Присядьте на корточки.",
+    "caption": "Колка дров"
+  },
+  {
+    "image_filename": "img046.jpg",
+    "pdf_page": 342,
+    "lesson": 6,
+    "topic": 4,
+    "anchor_text": "на\nвнутреннюю поверхность",
+    "caption": "Полная бабочка (стадия 1)"
+  },
+  {
+    "image_filename": "img047.jpg",
+    "pdf_page": 273,
+    "lesson": 5,
+    "topic": 2,
+    "anchor_text": "коснуться коленей лбом.",
+    "caption": "Падахастасана (в Сурья Намаскар)"
+  },
+  {
+    "image_filename": "img048.jpg",
+    "pdf_page": 44,
+    "lesson": 1,
+    "topic": 3,
+    "anchor_text": "называется кагасана – ",
+    "caption": "Кагасана (поза вороны)"
+  },
+  {
+    "image_filename": "img049.jpg",
+    "pdf_page": 53,
+    "lesson": 1,
+    "topic": 4,
+    "anchor_text": "Это естественная и важная",
+    "caption": "Схема внутренних органов"
+  },
+  {
+    "image_filename": "img050.jpg",
+    "pdf_page": 391,
+    "lesson": 7,
+    "topic": 2,
+    "anchor_text": "поверх левого бедра.",
+    "caption": "Ардха падмасана (полулотос)"
+  },
+  {
+    "image_filename": "img051.jpg",
+    "pdf_page": 386,
+    "lesson": 7,
+    "topic": 2,
+    "anchor_text": "положите ступню на бедро",
+    "caption": "Падмасана (поза лотоса)"
+  },
+  {
+    "image_filename": "img052.jpg",
+    "pdf_page": 376,
+    "lesson": 7,
+    "topic": 2,
+    "anchor_text": "сиддхасана  (совершенная",
+    "caption": "Сиддхасана"
+  },
+  {
+    "image_filename": "img053.jpg",
+    "pdf_page": 378,
+    "lesson": 7,
+    "topic": 2,
+    "anchor_text": "вместо сиддхасаны.",
+    "caption": "Сиддха йони асана"
+  },
+  {
+    "image_filename": "img054.jpg",
+    "pdf_page": 381,
+    "lesson": 7,
+    "topic": 2,
+    "anchor_text": "пальцы правой ноги в",
+    "caption": "Свастикасана"
+  },
+  {
+    "image_filename": "img055.jpg",
+    "pdf_page": 174,
+    "lesson": 3,
+    "topic": 4,
+    "anchor_text": "посередине между бровями.",
+    "caption": "Насагра мудра (вид сбоку)"
+  },
+  {
+    "image_filename": "img056.jpg",
+    "pdf_page": 473,
+    "lesson": 8,
+    "topic": 5,
+    "anchor_text": "смотреть на кончик носа",
+    "caption": "Агочари мудра"
+  },
+  {
+    "image_filename": "img057.jpg",
+    "pdf_page": 478,
+    "lesson": 8,
+    "topic": 6,
+    "anchor_text": "внешняя тратака на свече",
+    "caption": "Тратака (концентрация на свечу)"
+  },
+  {
+    "image_filename": "img058.jpg",
+    "pdf_page": 525,
+    "lesson": 9,
+    "topic": 3,
+    "anchor_text": "держа их вместе и не сгибая.",
+    "caption": "Шалабхасана (поза саранчи)"
+  },
+  {
+    "image_filename": "img059.jpg",
+    "pdf_page": 525,
+    "lesson": 9,
+    "topic": 3,
+    "anchor_text": "задержите дыхание и поднимите",
+    "caption": "Ардха шалабхасана"
+  },
+  {
+    "image_filename": "img060.jpg",
+    "pdf_page": 533,
+    "lesson": 9,
+    "topic": 5,
+    "anchor_text": "точки между бровями.",
+    "caption": "Шамбхави мудра"
+  },
+  {
+    "image_filename": "img061.jpg",
+    "pdf_page": 573,
+    "lesson": 10,
+    "topic": 3,
+    "anchor_text": "левую ноздрю уз",
+    "caption": "Сутра нети"
+  },
+  {
+    "image_filename": "img062.jpg",
+    "pdf_page": 582,
+    "lesson": 10,
+    "topic": 4,
+    "anchor_text": "ступню с внеш\nней стороны",
+    "caption": "Ардха матсиендрасана"
+  },
+  {
+    "image_filename": "img063.jpg",
+    "pdf_page": 346,
+    "lesson": 6,
+    "topic": 5,
+    "anchor_text": "языка касалась нёба.",
+    "caption": "Кхечари мудра"
+  },
+  {
+    "image_filename": "img064.jpg",
+    "pdf_page": 633,
+    "lesson": 11,
+    "topic": 3,
+    "anchor_text": "расставив ступни при",
+    "caption": "Тадасана (поза пальмы)"
+  },
+  {
+    "image_filename": "img065.jpg",
+    "pdf_page": 634,
+    "lesson": 11,
+    "topic": 3,
+    "anchor_text": "пальцами над головой,",
+    "caption": "Тирьяка тадасана"
+  },
+  {
+    "image_filename": "img066.jpg",
+    "pdf_page": 636,
+    "lesson": 11,
+    "topic": 3,
+    "anchor_text": "расставив ноги\nпримерно",
+    "caption": "Кати чакрасана"
+  },
+  {
+    "image_filename": "img067.jpg",
+    "pdf_page": 638,
+    "lesson": 11,
+    "topic": 3,
+    "anchor_text": "Основания пальцев\nног",
+    "caption": "Тирьяка бхуджангасана"
+  },
+  {
+    "image_filename": "img068.jpg",
+    "pdf_page": 640,
+    "lesson": 11,
+    "topic": 3,
+    "anchor_text": "Сядьте на корточки,",
+    "caption": "Ударакаршанасана"
+  },
+  {
+    "image_filename": "img069.jpg",
+    "pdf_page": 691,
+    "lesson": 12,
+    "topic": 3,
+    "anchor_text": "на первом рисунке.",
+    "caption": "Триконасана"
+  },
+  {
+    "image_filename": "img070.jpg",
+    "pdf_page": 696,
+    "lesson": 12,
+    "topic": 3,
+    "anchor_text": "Встаньте прямо, поставив",
+    "caption": "Двиконасана (поза двойного угла)"
+  },
+  {
+    "image_filename": "img071.jpg",
+    "pdf_page": 697,
+    "lesson": 12,
+    "topic": 3,
+    "anchor_text": "на ширину одного метра.",
+    "caption": "Доласана (поза маятника)"
+  },
+  {
+    "image_filename": "img072.jpg",
+    "pdf_page": 694,
+    "lesson": 12,
+    "topic": 3,
+    "anchor_text": "примерно одну секунду.",
+    "caption": "Паривритта Триконасана"
+  },
+  {
+    "image_filename": "img073.jpg",
+    "pdf_page": 697,
+    "lesson": 12,
+    "topic": 3,
+    "anchor_text": "качнитесь влево, стараясь",
+    "caption": "Доласана (динамическая фаза)"
+  },
+  {
+    "image_filename": "img074.jpg",
+    "pdf_page": 696,
+    "lesson": 12,
+    "topic": 3,
+    "anchor_text": "поднять руки как можно выше.",
+    "caption": "Двиконасана (вариант)"
+  }
+]
