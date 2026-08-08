@@ -520,9 +520,11 @@ class YogaApp {
                     });
 
                     if (isHeader) {
-                        htmlResult += `<h3>${p}</h3>`;
+                        htmlResult += `<h3>${p.replace(/\n/g, ' ')}</h3>`;
                     } else {
-                        let formattedText = p.replace(/\n/g, '<br>');
+                        // Join hard-wrapped lines with a space to allow fluid typography
+                        // and prevent arbitrary word breaking from manual PDF-style newlines.
+                        let formattedText = p.replace(/\n/g, ' ');
                         htmlResult += `<p>${formattedText}</p>`;
                     }
 
