@@ -516,85 +516,259 @@ class YogaApp {
             .toLocaleLowerCase('ru')
             .replace(/[^а-яёa-z0-9]/g, '');
 
-        for (let i = 0; i < parts.length; i++) {
-            if (i % 2 === 0) {
-                // This is a block of book text between source page markers.
-                let segmentText = parts[i];
-                if (!segmentText.trim()) continue;
+        // These labels occur as standalone OCR lines throughout the source.
+        // Keep their wording intact and restore their role in the book hierarchy.
+        const sectionHeadings = new Set([
+            'поза', 'подготовка', 'исходное положение', 'положение',
+            'техника выполнения', 'выполнение', 'дыхание', 'осознание',
+            'последовательность', 'продолжительность занятий',
+            'дыхание осознание и продолжительность', 'польза практики',
+            'благотворное действие', 'ограничения и предосторожности',
+            'противопоказания', 'примечания', 'внимание', 'рекомендации',
+            'оборудование', 'функции носа', 'резюме', 'ограничения',
+            'последовательность выполнения', 'последовательность и время занятий',
+            'осознание и продолжительность', 'дыхание и осознание',
+            'общие советы', 'польза', 'полезное действие', 'приготовление воды',
+            'время и частота выполнения', 'ошибки которых следует избегать',
+            'меры предосторожности', 'место и время', 'развитие осознания',
+            'определение', 'заключение', 'движение и укрывание', 'желудок',
+            'дополнительные подробности', 'упоминания в древних текстах',
+            'различные методы регулирования праны', 'анатомия', 'мантра',
+            'словесные инструкции', 'положение тела', 'начальное положение',
+            'конечное положение', 'основные положения', 'ограничения и противопоказания'
+        ].map(headingKey));
 
-                // Split segment into paragraphs
-                let paragraphs = segmentText.split(/\n\n+/);
+        // Exercise names and image captions already present in the book data are
+        // safe heading candidates only when they occupy a complete source line.
+        const exerciseHeadings = new Set();
+        Object.values(this.data.lessons || {}).forEach(lesson => {
+            Object.values(lesson.topics || {}).forEach(item => {
+                if (item.name) exerciseHeadings.add(headingKey(item.name));
+            });
+        });
+        this.imagePositions.forEach(pos => {
+            const caption = String(pos.caption || '').trim();
+            if (!caption || /^логотип\s*:/i.test(caption)) return;
+            exerciseHeadings.add(headingKey(caption));
+            exerciseHeadings.add(headingKey(caption.replace(/^техника выполнения\s+/i, '')));
+            exerciseHeadings.add(headingKey(caption.replace(/\s*\([^)]*\)\s*$/, '')));
+        });
 
-                paragraphs.forEach(p => {
-                    p = p.trim();
-                    if (!p) return;
-
-                    // Header detection
-                    const isHeader = p.match(/^[А-ЯЁ\d\.\s\-]+$/) && p.length < 100 && p === p.toUpperCase();
-                    const normalizedHeading = p.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase('ru');
-                    const isBookSubheading = /^(?:поза|подготовка|исходное положение|положение|техника выполнения|выполнение|дыхание|осознание|последовательность|продолжительность занятий|дыхание, осознание и продолжительность|польза практики|благотворное действие|ограничения и предосторожности|противопоказания|примечания|внимание|рекомендации)$/.test(normalizedHeading)
-                        || /^(?:упражнение|вариант|этап)\s+\d+(?:[.:)]\s*.*)?$/.test(normalizedHeading);
-
-                    // Check if any image belongs here
-                    let imagesToInsert = [];
-                    const normalize = (t) => t.replace(/[^а-яёa-z0-9]/gi, '').toLowerCase();
-                    const normalizedP = normalize(p);
-
-                    relevantPositions.forEach(pos => {
-                        if (!placedImages.has(pos.image_filename)) {
-                            const normalizedAnchor = normalize(pos.anchor_text);
-                            // Search for anchor text in the paragraph
-                            if (normalizedP.includes(normalizedAnchor)) {
-                                imagesToInsert.push(pos);
-                                placedImages.add(pos.image_filename);
-                            }
-                        }
-                    });
-
-                    if (isHeader) {
-                        htmlResult += `<h3>${p.replace(/\n/g, ' ')}</h3>`;
-                    } else if (isBookSubheading) {
-                        htmlResult += `<h4>${p.replace(/\n/g, ' ')}</h4>`;
-                    } else {
-                        // Join hard-wrapped lines with a space to allow fluid typography
-                        // and prevent arbitrary word breaking from manual PDF-style newlines.
-                        let displayParagraph = p;
-                        if (firstContentParagraph) {
-                            const lines = displayParagraph.split('\n');
-                            const removedLines = new Set();
-                            let lineIndex = 0;
-                            const lessonHeading = lines[lineIndex]?.match(/^Урок\s+\d+\.\s*(.+)$/i);
-
-                            if (lessonHeading && headingKey(lessonHeading[1]) === topicNameKey) {
-                                removedLines.add(lineIndex++);
-                            }
-
-                            if (/^Тема\s+\d+\s*$/i.test(lines[lineIndex]?.trim() || '')) {
-                                removedLines.add(lineIndex++);
-                                if (headingKey(lines[lineIndex] || '') === topicNameKey) {
-                                    removedLines.add(lineIndex);
-                                }
-                            } else if (headingKey(lines[lineIndex] || '') === topicNameKey) {
-                                removedLines.add(lineIndex);
-                            }
-
-                            if (removedLines.size) {
-                                displayParagraph = lines.filter((_, index) => !removedLines.has(index)).join('\n').trim();
-                            }
-                        }
-
-                        let formattedText = displayParagraph.replace(/\n/g, ' ');
-                        if (formattedText.trim()) htmlResult += `<p>${formattedText}</p>`;
-                    }
-                    firstContentParagraph = false;
-
-                    // Insert images AFTER the paragraph containing their anchor
-                    imagesToInsert.forEach(pos => {
-                        htmlResult += this.generateImageHtmlFromPos(pos);
-                    });
-                });
+        // Some repeated page headers contain OCR differences from the topic
+        // metadata. Repetition at page boundaries is enough to identify them as
+        // scan furniture without guessing or changing the underlying wording.
+        const pageHeaderCounts = new Map();
+        Object.values(this.data.lessons[this.currentLesson]?.topics || {}).forEach(item => {
+            const sourceText = item.text || '';
+            for (const match of sourceText.matchAll(/\n\d{1,4}\n\s*(Урок\s+\d+\.\s*[^\n]{2,120})/gi)) {
+                const key = headingKey(match[1]);
+                pageHeaderCounts.set(key, (pageHeaderCounts.get(key) || 0) + 1);
             }
+        });
+
+        const isPageRunningHeader = value => {
+            const match = value.trim().match(/^Урок\s+(\d+)\.\s*(.+)$/i);
+            if (!match) return false;
+            if ((pageHeaderCounts.get(headingKey(value)) || 0) >= 2) return true;
+            const lesson = this.data.lessons[match[1]];
+            return Object.values(lesson?.topics || {}).some(item =>
+                headingKey(item.name || '') === headingKey(match[2])
+            );
+        };
+
+        const isSectionHeading = line => {
+            const normalized = headingKey(line);
+            return sectionHeadings.has(normalized)
+                || /^(?:упражнение|вариант|этап|стадия|часть)\s*\d+(?:.*)?$/i.test(line.trim());
+        };
+
+        const escapeText = value => value
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        // These six splits occur exactly at hard OCR line breaks and form
+        // unambiguous words when joined. Apply only in rendered text; preserve
+        // the original OCR string for search and future source comparison.
+        const knownLineWrapSplits = new Set([
+            'постепен но', 'расслабля ет', 'образу ет',
+            'приветству ют', 'чрезмер но', 'оттачива ется'
+        ]);
+        const joinWrappedLines = lines => {
+            let text = '';
+            lines.flatMap(line => String(line).split('\n')).forEach(line => {
+                let next = line.trim();
+                if (!next) return;
+                const left = text.match(/([А-Яа-яЁё]+)$/);
+                const right = next.match(/^([А-Яа-яЁё]+)(?=\s|$)/);
+                const splitKey = left && right
+                    ? `${left[1].toLocaleLowerCase('ru')} ${right[1].toLocaleLowerCase('ru')}`
+                    : '';
+                if (splitKey && knownLineWrapSplits.has(splitKey)) {
+                    text = text.slice(0, -left[1].length) + left[1] + right[1];
+                    next = next.slice(right[1].length).trimStart();
+                }
+                if (next) text += `${text ? ' ' : ''}${next}`;
+            });
+            return text.replace(/\s+/g, ' ').trim();
+        };
+
+        const renderParagraph = sourceParagraph => {
+            const lines = sourceParagraph.split('\n').map(line => line.trim()).filter(Boolean);
+            if (!lines.length) return '';
+
+            const output = [];
+            let bodyLines = [];
+            let listItems = [];
+
+            const flushBody = () => {
+                if (!bodyLines.length) return;
+                const body = joinWrappedLines(bodyLines);
+                if (body) output.push(`<p>${escapeText(body)}</p>`);
+                bodyLines = [];
+            };
+            const flushList = () => {
+                if (!listItems.length) return;
+                output.push(`<ol>${listItems.map(item => `<li>${escapeText(joinWrappedLines([item]))}</li>`).join('')}</ol>`);
+                listItems = [];
+            };
+
+            lines.forEach(line => {
+                const normalized = headingKey(line);
+                const isSection = isSectionHeading(line);
+                const isExercise = exerciseHeadings.has(normalized);
+                const isPrintedTopicHeading = /^Урок\s+\d+\.\s*\S/i.test(line)
+                    || /(?:\.\s*){2,}/.test(line);
+                const isCapsHeading = line.length < 100
+                    && /[А-ЯЁ]/.test(line)
+                    && line === line.toLocaleUpperCase('ru')
+                    && /[А-ЯЁ]/.test(line.replace(/[\d\s.\-–—]/g, ''));
+
+                if (isSection || isExercise || isPrintedTopicHeading || isCapsHeading) {
+                    flushList();
+                    flushBody();
+                    output.push(`<${isSection ? 'h4' : 'h3'}>${escapeText(line)}</${isSection ? 'h4' : 'h3'}>`);
+                    return;
+                }
+
+                const numberedItem = line.match(/^\d+[.)]\s+(.+)$/);
+                if (numberedItem) {
+                    flushBody();
+                    listItems.push(numberedItem[1]);
+                } else if (listItems.length) {
+                    listItems[listItems.length - 1] += `\n${line}`;
+                } else {
+                    bodyLines.push(line);
+                }
+            });
+
+            flushList();
+            flushBody();
+            return output.join('');
+        };
+
+        const pageSegments = [];
+        for (let i = 0; i < parts.length; i += 2) {
+            let segmentText = parts[i];
+            if (!segmentText?.trim()) continue;
+
+            // Source-page headers are repeated scan furniture, not part of
+            // the lesson. Remove only metadata-backed or repeated headings at
+            // the beginning of a page segment; leave book JSON untouched.
+            if (i > 0) {
+                const lines = segmentText.split('\n');
+                let atPageTop = true;
+                segmentText = lines.filter(line => {
+                    const value = line.trim();
+                    if (!value) return !atPageTop;
+                    if (atPageTop && (isPageRunningHeader(value)
+                        || headingKey(value) === headingKey('Йога и крийя. Вводный курс'))) {
+                        atPageTop = false;
+                        return false;
+                    }
+                    atPageTop = false;
+                    return true;
+                }).join('\n');
+            }
+            pageSegments.push(segmentText);
         }
+
+        // A page break is only a hard line break. Joining the cleaned segments
+        // before paragraph splitting lets sentences continue across a removed
+        // running head while preserving real blank-line paragraph boundaries.
+        const paragraphs = pageSegments.join('\n').split(/\n\n+/);
+        paragraphs.forEach(p => {
+            p = p.trim();
+            if (!p) return;
+
+            // Check if any image belongs here
+            const imagesToInsert = [];
+            const normalize = (t) => t.replace(/[^а-яёa-z0-9]/gi, '').toLowerCase();
+            const normalizedP = normalize(p);
+
+            relevantPositions.forEach(pos => {
+                if (!placedImages.has(pos.image_filename)) {
+                    const normalizedAnchor = normalize(pos.anchor_text);
+                    // Search for anchor text in the paragraph
+                    if (normalizedP.includes(normalizedAnchor)) {
+                        imagesToInsert.push(pos);
+                        placedImages.add(pos.image_filename);
+                    }
+                }
+            });
+
+
+            let displayParagraph = p;
+            if (firstContentParagraph) {
+                const lines = displayParagraph.split('\n');
+                let lineIndex = 0;
+                while (lineIndex < lines.length && !lines[lineIndex].trim()) lineIndex++;
+
+                const lessonHeading = lines[lineIndex]?.trim().match(/^Урок\s+\d+\.\s*(.+)$/i);
+                if (lessonHeading && headingKey(lessonHeading[1]) === topicNameKey) {
+                    lines.splice(lineIndex, 1);
+                }
+
+                // The app already supplies the lesson/topic locator.
+                // Remove only the source locator line; preserve a printed
+                // heading if OCR differs from the topic metadata.
+                const topicLocatorIndex = lines.findIndex((line, index) =>
+                    index <= lineIndex + 2 && /^Тема\s+\d+\s*$/i.test(line.trim())
+                );
+                if (topicLocatorIndex !== -1) lines.splice(topicLocatorIndex, 1);
+
+                // A printed topic title can wrap across multiple OCR lines or
+                // appear twice. Suppress only a prefix that normalizes exactly
+                // to the existing topic metadata.
+                for (let pass = 0; pass < 3 && topicNameKey; pass++) {
+                    while (lineIndex < lines.length && !lines[lineIndex].trim()) lineIndex++;
+                    let combinedTitle = '';
+                    let matchedEnd = -1;
+                    for (let index = lineIndex; index < Math.min(lines.length, lineIndex + 4); index++) {
+                        if (!lines[index].trim()) break;
+                        combinedTitle += lines[index];
+                        const candidateKey = headingKey(combinedTitle);
+                        if (candidateKey === topicNameKey) {
+                            matchedEnd = index;
+                            break;
+                        }
+                        if (!topicNameKey.startsWith(candidateKey)) break;
+                    }
+                    if (matchedEnd < 0) break;
+                    lines.splice(lineIndex, matchedEnd - lineIndex + 1);
+                }
+
+                displayParagraph = lines.join('\n').trim();
+            }
+
+            if (displayParagraph) htmlResult += renderParagraph(displayParagraph);
+            firstContentParagraph = false;
+
+            // Insert images AFTER the paragraph containing their anchor
+            imagesToInsert.forEach(pos => {
+                htmlResult += this.generateImageHtmlFromPos(pos);
+            });
+        });
 
         // Safety: Insert any images that were matched to this topic but NOT placed via anchors
         relevantPositions.forEach(pos => {
