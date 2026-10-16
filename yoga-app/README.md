@@ -13,11 +13,9 @@ A premium mobile-first web application for studying the complete course of Ancie
 ### Personal Organization
 - **🔖 Bookmarks** - Save important pages for quick access
 - **❤️ Favorites** - Mark key topics you want to revisit
-- **📝 Notes** - Add personal notes to any topic
 - **🏆 Achievements** - Unlock badges as you progress through the course
 
 ### Practice Tools
-- **🧘 Meditation Timer** - Built-in timer with breathing animation (5, 10, 15, 30 min presets)
 - **🔥 Daily Streak** - Track your daily practice consistency
 - **📈 Statistics** - View your learning statistics and achievements
 
@@ -25,7 +23,7 @@ A premium mobile-first web application for studying the complete course of Ancie
 - **🎨 Beautiful Design** - Inspired by Apple Books, Headspace, and Calm
 - **📱 Responsive Layout** - Works perfectly on mobile, tablet, and desktop
 - **🌙 Smooth Animations** - Polished transitions and interactions
-- **💾 Offline Support** - All data stored locally in browser
+- **💾 Local Progress** - Bookmarks, favorites, and progress are stored in this browser
 
 ## 🚀 Getting Started
 
@@ -69,8 +67,6 @@ yoga-app/
 4. **Use Features**:
    - 🔖 Bookmark important pages
    - ❤️ Add topics to favorites
-   - 📝 Write personal notes
-   - 🧘 Use meditation timer for practice
    - 🔍 Search across all content
 
 ## 🏆 Achievement System

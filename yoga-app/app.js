@@ -11,6 +11,7 @@ class YogaApp {
         this.notes = {};
         this.highlights = {};
         this.sidebarOpen = true;
+        this.modalReturnFocus = null;
         this.searchQuery = '';
         this.dailyStreak = 0;
         this.lastVisitDate = null;
@@ -124,6 +125,7 @@ class YogaApp {
 
         // Menu toggle
         document.getElementById('menuToggle').addEventListener('click', () => this.toggleSidebar());
+        document.getElementById('sidebarOverlay').addEventListener('click', () => this.closeSidebar());
         
         // Header buttons
         document.getElementById('searchBtn').addEventListener('click', () => this.openModal('searchModal'));
@@ -136,6 +138,7 @@ class YogaApp {
         document.getElementById('closeBookmarks').addEventListener('click', () => this.closeModal('bookmarksModal'));
         document.getElementById('closeFavorites').addEventListener('click', () => this.closeModal('favoritesModal'));
         document.getElementById('closeProgress').addEventListener('click', () => this.closeModal('progressModal'));
+        document.getElementById('closeNotes').addEventListener('click', () => this.closeModal('notesModal'));
         
         // Search functionality
         const searchInput = document.getElementById('searchInput');
@@ -150,12 +153,52 @@ class YogaApp {
             });
         });
 
-        // Keyboard navigation
+        window.addEventListener('resize', () => {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('collapsed');
+                mainContent.classList.remove('expanded');
+                this.closeSidebar();
+            } else {
+                sidebar.classList.remove('show');
+                document.getElementById('sidebarOverlay').classList.remove('show');
+                document.body.classList.remove('sidebar-open');
+                this.sidebarOpen = !sidebar.classList.contains('collapsed');
+                document.getElementById('menuToggle').setAttribute('aria-expanded', String(this.sidebarOpen));
+                document.getElementById('menuToggle').setAttribute('aria-label', this.sidebarOpen ? 'Свернуть меню уроков' : 'Открыть меню уроков');
+            }
+        });
+        if (window.innerWidth <= 768) this.closeSidebar();
+
+        // Escape closes the active dialog; Tab remains inside it until it is closed.
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                document.querySelectorAll('.modal.show').forEach(modal => {
-                    modal.classList.remove('show');
-                });
+                const modal = document.querySelector('.modal.show');
+                if (modal) this.closeModal(modal.id);
+                else if (document.getElementById('sidebar').classList.contains('show')) this.closeSidebar();
+                return;
+            }
+
+            if (e.key === 'Tab') {
+                const modal = document.querySelector('.modal.show .modal-content');
+                if (!modal) return;
+                const focusable = [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')]
+                    .filter(element => element.offsetParent !== null);
+                if (!focusable.length) {
+                    e.preventDefault();
+                    modal.focus();
+                    return;
+                }
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (e.shiftKey && document.activeElement === first) {
+                    e.preventDefault();
+                    last.focus();
+                } else if (!e.shiftKey && document.activeElement === last) {
+                    e.preventDefault();
+                    first.focus();
+                }
             }
         });
     }
@@ -165,12 +208,29 @@ class YogaApp {
         const mainContent = document.getElementById('mainContent');
         
         if (window.innerWidth <= 768) {
-            sidebar.classList.toggle('show');
+            const open = !sidebar.classList.contains('show');
+            sidebar.classList.toggle('show', open);
+            document.getElementById('sidebarOverlay').classList.toggle('show', open);
+            document.body.classList.toggle('sidebar-open', open);
+            this.sidebarOpen = open;
         } else {
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
+            const collapsed = !sidebar.classList.contains('collapsed');
+            sidebar.classList.toggle('collapsed', collapsed);
+            mainContent.classList.toggle('expanded', collapsed);
+            this.sidebarOpen = !collapsed;
         }
-        this.sidebarOpen = !sidebar.classList.contains('collapsed') && !sidebar.classList.contains('show');
+        document.getElementById('menuToggle').setAttribute('aria-expanded', String(this.sidebarOpen));
+        document.getElementById('menuToggle').setAttribute('aria-label', this.sidebarOpen ? 'Свернуть меню уроков' : 'Открыть меню уроков');
+    }
+
+    closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.remove('show');
+        document.getElementById('sidebarOverlay').classList.remove('show');
+        document.body.classList.remove('sidebar-open');
+        this.sidebarOpen = false;
+        document.getElementById('menuToggle').setAttribute('aria-expanded', 'false');
+        document.getElementById('menuToggle').setAttribute('aria-label', 'Открыть меню уроков');
     }
 
     toggleTheme() {
@@ -206,12 +266,15 @@ class YogaApp {
                 .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
             
             lessonEl.innerHTML = `
-                <div class="lesson-title">Урок ${lessonNum}</div>
-                <ul class="topic-list">
+                <button type="button" class="lesson-title" aria-expanded="${isExpanded}" aria-controls="topics-${lessonNum}">Урок ${lessonNum}</button>
+                <ul class="topic-list" id="topics-${lessonNum}">
                     ${sortedTopics.map(([topicNum, topic]) => `
-                        <li class="topic-item ${this.currentLesson === lessonNum && this.currentTopic === topicNum ? 'active' : ''}"
-                            data-lesson="${lessonNum}" data-topic="${topicNum}">
-                            Тема ${topicNum}: ${topic.name}
+                        <li>
+                            <button type="button" class="topic-item ${this.currentLesson === lessonNum && this.currentTopic === topicNum ? 'active' : ''}"
+                                data-lesson="${lessonNum}" data-topic="${topicNum}"
+                                ${this.currentLesson === lessonNum && this.currentTopic === topicNum ? 'aria-current="page"' : ''}>
+                                Тема ${topicNum}: ${topic.name}
+                            </button>
                         </li>
                     `).join('')}
                 </ul>
@@ -225,10 +288,12 @@ class YogaApp {
                     this.expandedLessons.delete(lessonNum);
                     lessonEl.classList.remove('expanded');
                     lessonEl.classList.add('collapsed');
+                    lessonEl.querySelector('.lesson-title').setAttribute('aria-expanded', 'false');
                 } else {
                     this.expandedLessons.add(lessonNum);
                     lessonEl.classList.add('expanded');
                     lessonEl.classList.remove('collapsed');
+                    lessonEl.querySelector('.lesson-title').setAttribute('aria-expanded', 'true');
                 }
             });
 
@@ -245,7 +310,7 @@ class YogaApp {
 
                 // Close sidebar on mobile
                 if (window.innerWidth <= 768) {
-                    document.getElementById('sidebar').classList.remove('show');
+                    this.closeSidebar();
                 }
             });
         });
@@ -405,11 +470,6 @@ class YogaApp {
             html += `
                             </tbody>
                         </table>
-                    </div>
-                    <div class="program-actions">
-                        <button class="start-practice-btn" onclick="alert('Функция таймера будет добавлена в следующем обновлении!')">
-                            🧘 Начать практику
-                        </button>
                     </div>
                 </div>
             `;
@@ -596,11 +656,11 @@ class YogaApp {
         } else {
             container.innerHTML = this.bookmarks.map((bookmark, index) => `
                 <div class="list-item">
-                    <div class="list-item-info" onclick="app.loadBookmark(${index})">
+                    <button type="button" class="list-item-info" onclick="app.loadBookmark(${index})">
                         <div class="list-item-title">Урок ${bookmark.lesson}, Тема ${bookmark.topic}</div>
                         <div class="list-item-subtitle">${bookmark.name}</div>
-                    </div>
-                    <button class="remove-btn" onclick="app.removeBookmark(${index})">Удалить</button>
+                    </button>
+                    <button type="button" class="remove-btn" onclick="app.removeBookmark(${index})">Удалить</button>
                 </div>
             `).join('');
         }
@@ -629,11 +689,11 @@ class YogaApp {
         } else {
             container.innerHTML = this.favorites.map((fav, index) => `
                 <div class="list-item">
-                    <div class="list-item-info" onclick="app.loadFavorite(${index})">
+                    <button type="button" class="list-item-info" onclick="app.loadFavorite(${index})">
                         <div class="list-item-title">Урок ${fav.lesson}, Тема ${fav.topic}</div>
                         <div class="list-item-subtitle">${fav.name}</div>
-                    </div>
-                    <button class="remove-btn" onclick="app.removeFavorite(${index})">Удалить</button>
+                    </button>
+                    <button type="button" class="remove-btn" onclick="app.removeFavorite(${index})">Удалить</button>
                 </div>
             `).join('');
         }
@@ -748,18 +808,18 @@ class YogaApp {
             resultsContainer.innerHTML = '<p style="padding: 1rem; color: #666;">Ничего не найдено</p>';
         } else {
             resultsContainer.innerHTML = results.slice(0, 50).map(result => `
-                <div class="list-item" onclick="app.loadTopic('${result.lesson}', '${result.topic}')">
+                <button type="button" class="list-item" onclick="app.loadSearchResult('${result.lesson}', '${result.topic}')">
                     <div class="list-item-info">
                         <div class="list-item-title">Урок ${result.lesson}, Тема ${result.topic}: ${result.name}</div>
                         <div class="list-item-subtitle" style="font-size: 0.85rem; color: #666;">${result.snippet}</div>
                     </div>
-                </div>
+                </button>
             `).join('');
         }
     }
 
-    loadSearchResult(sectionKey, pageIndex) {
-        // Handled by loadTopic now
+    loadSearchResult(lessonNum, topicNum) {
+        this.loadTopic(lessonNum, topicNum);
         this.closeModal('searchModal');
     }
 
@@ -798,13 +858,13 @@ class YogaApp {
             
             <div class="page-content">
                 <div class="welcome-image-container">
-                    <img src="assets/images/img001.jpg" alt="Cover Image" class="welcome-image" onerror="this.style.display='none'">
+                    <img src="assets/images/img001.jpg" alt="Эмблема на обложке книги" class="welcome-image" onerror="this.style.display='none'">
                 </div>
-                <p>Это приложение содержит полный курс древних тантрических техник йоги и крийи.</p>
+                <p class="welcome-intro">Это приложение содержит полный курс древних тантрических техник йоги и крийи.</p>
                 
                 <h3>О курсе</h3>
                 <p>Курс состоит из <strong>${lessonsCount} уроков</strong>, включающих <strong>${topicsCount} тем</strong> по различным аспектам йогической практики:</p>
-                <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <ul class="welcome-topic-list">
                     <li>Крийя йога</li>
                     <li>Хатха йога (асаны, шаткармы)</li>
                     <li>Пранаяма (дыхательные техники)</li>
@@ -814,7 +874,7 @@ class YogaApp {
                 </ul>
                 
                 <h3>Как пользоваться приложением</h3>
-                <ul style="margin: 1rem 0 1rem 2rem; line-height: 1.8;">
+                <ul class="welcome-guide-list">
                     <li>Выбирайте уроки и темы в меню слева</li>
                     <li>Используйте поиск для быстрого нахождения информации</li>
                     <li>Добавляйте важные страницы в закладки</li>
@@ -823,30 +883,30 @@ class YogaApp {
                 </ul>
                 
                 <h3>Функции приложения</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                    <div style="padding: 1rem; background: var(--bg-color); border-radius: 8px;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📚</div>
+                <div class="welcome-feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">📚</div>
                         <strong>Уроки</strong>
-                        <p style="font-size: 0.9rem; margin-top: 0.3rem;">${lessonsCount} уроков с темами</p>
+                        <p>${lessonsCount} уроков с темами</p>
                     </div>
-                    <div style="padding: 1rem; background: var(--bg-color); border-radius: 8px;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔖</div>
+                    <div class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">🔖</div>
                         <strong>Закладки</strong>
-                        <p style="font-size: 0.9rem; margin-top: 0.3rem;">${this.bookmarks.length} сохранено</p>
+                        <p>${this.bookmarks.length} сохранено</p>
                     </div>
-                    <div style="padding: 1rem; background: var(--bg-color); border-radius: 8px;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">❤️</div>
+                    <div class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">❤️</div>
                         <strong>Избранное</strong>
-                        <p style="font-size: 0.9rem; margin-top: 0.3rem;">${this.favorites.length} тем</p>
+                        <p>${this.favorites.length} тем</p>
                     </div>
-                    <div style="padding: 1rem; background: var(--bg-color); border-radius: 8px;">
-                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📊</div>
+                    <div class="feature-card">
+                        <div class="feature-icon" aria-hidden="true">📊</div>
                         <strong>Прогресс</strong>
-                        <p style="font-size: 0.9rem; margin-top: 0.3rem;">Отслеживание обучения</p>
+                        <p>Отслеживание обучения</p>
                     </div>
                 </div>
                 
-                <p style="margin-top: 2rem; text-align: center; color: var(--primary-color); font-style: italic;">
+                <p class="welcome-note">
                     Начните свое путешествие в мир йоги, выбрав первый урок в меню слева.
                 </p>
             </div>
@@ -854,11 +914,23 @@ class YogaApp {
     }
 
     openModal(modalId) {
-        document.getElementById(modalId).classList.add('show');
+        const modal = document.getElementById(modalId);
+        this.modalReturnFocus = document.activeElement;
+        modal.classList.add('show');
+        modal.setAttribute('aria-hidden', 'false');
+        const initialFocus = modal.id === 'searchModal'
+            ? modal.querySelector('#searchInput')
+            : modal.querySelector('button:not([disabled])');
+        if (initialFocus) initialFocus.focus();
     }
 
     closeModal(modalId) {
-        document.getElementById(modalId).classList.remove('show');
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        if (this.modalReturnFocus && this.modalReturnFocus.isConnected) this.modalReturnFocus.focus();
+        this.modalReturnFocus = null;
     }
 
     showToast(message) {

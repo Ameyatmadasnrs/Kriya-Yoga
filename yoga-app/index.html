@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ancient Yoga & Kriya - Premium Learning</title>
+    <title>Крийя Йога — электронная библиотека</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,11 +11,11 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <button class="menu-toggle" id="menuToggle">☰</button>
-                <h1 class="logo" id="appTitle">Крийя Йога</h1>
+                <button class="menu-toggle" id="menuToggle" type="button" aria-label="Свернуть меню уроков" title="Свернуть или открыть меню уроков" aria-expanded="true" aria-controls="sidebar">☰</button>
+                <div class="logo" id="appTitle">Крийя Йога</div>
                 <div class="header-actions">
                     <div class="theme-toggle-container">
-                        <button id="themeToggle" class="theme-btn">
+                        <button id="themeToggle" class="theme-btn" type="button" aria-label="Переключить оформление" title="Переключить оформление">
                             <span class="theme-btn-icon">
                                 <svg class="normal-only" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <circle cx="12" cy="12" r="5"></circle>
@@ -38,26 +38,26 @@
                             </span>
                         </button>
                     </div>
-                    <button class="icon-btn" id="searchBtn" title="Поиск">
+                    <button class="icon-btn" id="searchBtn" type="button" aria-label="Поиск" title="Поиск">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                         <span class="emoji-fallback">🔍</span>
                     </button>
-                    <button class="icon-btn" id="bookmarksBtn" title="Закладки">
+                    <button class="icon-btn" id="bookmarksBtn" type="button" aria-label="Закладки" title="Закладки">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
                         </svg>
                         <span class="emoji-fallback">🔖</span>
                     </button>
-                    <button class="icon-btn" id="favoritesBtn" title="Избранное">
+                    <button class="icon-btn" id="favoritesBtn" type="button" aria-label="Избранное" title="Избранное">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
                         </svg>
                         <span class="emoji-fallback">❤️</span>
                     </button>
-                    <button class="icon-btn" id="progressBtn" title="Прогресс">
+                    <button class="icon-btn" id="progressBtn" type="button" aria-label="Прогресс чтения" title="Прогресс чтения">
                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
@@ -75,6 +75,7 @@
                 <div id="lessonsList"></div>
             </nav>
         </aside>
+        <button class="sidebar-overlay" id="sidebarOverlay" type="button" aria-label="Закрыть меню уроков" tabindex="-1"></button>
 
         <!-- Main Content -->
         <main class="main-content" id="mainContent">
@@ -82,66 +83,55 @@
         </main>
 
         <!-- Search Modal -->
-        <div class="modal" id="searchModal">
-            <div class="modal-content search-modal">
-                <span class="close-btn" id="closeSearch">&times;</span>
-                <h2>Поиск по тексту</h2>
-                <input type="text" id="searchInput" placeholder="Введите поисковый запрос..." class="search-input">
+        <div class="modal" id="searchModal" aria-hidden="true">
+            <div class="modal-content search-modal" role="dialog" aria-modal="true" aria-labelledby="searchTitle" tabindex="-1">
+                <button class="close-btn" id="closeSearch" type="button" aria-label="Закрыть поиск">&times;</button>
+                <h2 id="searchTitle">Поиск по тексту</h2>
+                <label class="visually-hidden" for="searchInput">Поиск по тексту книги</label>
+                <input type="search" id="searchInput" placeholder="Введите поисковый запрос..." class="search-input" autocomplete="off">
                 <div id="searchResults" class="search-results"></div>
             </div>
         </div>
 
         <!-- Bookmarks Modal -->
-        <div class="modal" id="bookmarksModal">
-            <div class="modal-content">
-                <span class="close-btn" id="closeBookmarks">&times;</span>
-                <h2>Закладки</h2>
+        <div class="modal" id="bookmarksModal" aria-hidden="true">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="bookmarksTitle" tabindex="-1">
+                <button class="close-btn" id="closeBookmarks" type="button" aria-label="Закрыть закладки">&times;</button>
+                <h2 id="bookmarksTitle">Закладки</h2>
                 <div id="bookmarksList" class="list-container"></div>
             </div>
         </div>
 
         <!-- Favorites Modal -->
-        <div class="modal" id="favoritesModal">
-            <div class="modal-content">
-                <span class="close-btn" id="closeFavorites">&times;</span>
-                <h2>Избранное</h2>
+        <div class="modal" id="favoritesModal" aria-hidden="true">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="favoritesTitle" tabindex="-1">
+                <button class="close-btn" id="closeFavorites" type="button" aria-label="Закрыть избранное">&times;</button>
+                <h2 id="favoritesTitle">Избранное</h2>
                 <div id="favoritesList" class="list-container"></div>
             </div>
         </div>
 
         <!-- Progress Modal -->
-        <div class="modal" id="progressModal">
-            <div class="modal-content progress-modal">
-                <span class="close-btn" id="closeProgress">&times;</span>
-                <h2>Прогресс обучения</h2>
+        <div class="modal" id="progressModal" aria-hidden="true">
+            <div class="modal-content progress-modal" role="dialog" aria-modal="true" aria-labelledby="progressTitle" tabindex="-1">
+                <button class="close-btn" id="closeProgress" type="button" aria-label="Закрыть прогресс">&times;</button>
+                <h2 id="progressTitle">Прогресс обучения</h2>
                 <div id="progressContent" class="progress-content"></div>
             </div>
         </div>
 
         <!-- Notes Modal -->
-        <div class="modal" id="notesModal">
-            <div class="modal-content">
-                <span class="close-btn" id="closeNotes">&times;</span>
-                <h2>📝 Заметки</h2>
+        <div class="modal" id="notesModal" aria-hidden="true">
+            <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="notesTitle" tabindex="-1">
+                <button class="close-btn" id="closeNotes" type="button" aria-label="Закрыть заметки">&times;</button>
+                <h2 id="notesTitle">Заметки</h2>
                 <div id="notesList" class="list-container"></div>
-            </div>
-        </div>
-
-        <!-- Timer Modal -->
-        <div class="modal" id="timerModal">
-            <div class="modal-content timer-modal">
-                <span class="close-btn" id="closeTimer">&times;</span>
-                <h2>🧘 Таймер медитации</h2>
-                <div id="timerContent" class="timer-content"></div>
             </div>
         </div>
 
         <!-- Toast Notification -->
         <div class="toast" id="toast"></div>
     </div>
-
-    <!-- Embedded book data for local file access (works without server) -->
-    <!-- Embedded image map data -->
 
     <script src="app.js"></script>
 </body></html>
