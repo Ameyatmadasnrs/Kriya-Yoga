@@ -5,7 +5,7 @@ A premium mobile-first web application for studying the complete course of Ancie
 ## ✨ Features
 
 ### Core Learning Experience
-- **📚 Complete Course Content** - All 12 lessons with 72 topics from the original book
+- **📚 Course Content** - 12 lessons with 84 topics in the available Russian OCR text
 - **📖 Beautiful Reading Interface** - Clean, distraction-free reading with premium typography
 - **🔍 Full-Text Search** - Find any topic or concept instantly
 - **📊 Progress Tracking** - Visual progress bars for each lesson and overall completion
@@ -29,12 +29,14 @@ A premium mobile-first web application for studying the complete course of Ancie
 
 ## 🚀 Getting Started
 
-Simply open `index.html` in any modern web browser. No installation required!
+No package installation or build step is required. Run the app through a local web server so the browser can load its JSON data and images.
 
 ### For Development
 ```bash
-# Serve locally with Python
-python3 -m http.server 8000
+# Windows PowerShell, from this folder
+python -m http.server 8000
+
+# Then open http://localhost:8000
 
 # Or use any static file server
 npx serve .
@@ -48,8 +50,15 @@ yoga-app/
 ├── styles.css          # Premium CSS styles
 ├── app.js              # Application logic
 ├── README.md           # This file
-└── data/
-    └── book.json       # Complete course content (source of truth)
+├── data/
+│   ├── book.json       # Canonical course text (12 lessons, 84 topics)
+│   ├── image-positions.json # Curated image-to-topic links and text anchors
+│   └── practice-plans.json  # Practice plan data
+├── scripts/
+│   └── repair_ocr_line_breaks.py # Repairs line-wrap splits against ../data
+└── assets/images/
+    ├── img001.jpg ...  # Scanned illustrations
+    └── image-map.json  # Image metadata synchronized from image positions
 ```
 
 ## 🎯 How to Use
@@ -77,7 +86,7 @@ Unlock achievements as you learn:
 
 ## 💾 Data Storage
 
-All user data is stored locally in browser localStorage:
+Book text and practice material load from `data/*.json`. User data is stored locally in browser localStorage:
 - Bookmarks
 - Favorites
 - Reading progress

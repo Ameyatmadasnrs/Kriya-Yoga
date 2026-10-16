@@ -256,6 +256,13 @@ body {
     font-size: 1.3rem;
 }
 
+.page-content h4 {
+    color: var(--primary-color);
+    margin: 1.25rem 0 0.65rem;
+    font-size: 1.08rem;
+    font-weight: 700;
+}
+
 .page-number {
     text-align: center;
     color: var(--text-light);
@@ -924,6 +931,11 @@ body.vedic-theme .page-content h3 {
     padding-bottom: 5px;
     margin-bottom: 1rem;
     margin-top: 2rem;
+}
+
+body.vedic-theme .page-content h4 {
+    color: var(--primary-color);
+    font-family: 'Times New Roman', serif;
 }
 
 body.vedic-theme .action-btn {

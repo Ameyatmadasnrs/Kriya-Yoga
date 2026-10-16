@@ -2,7 +2,6 @@
 class YogaApp {
     constructor() {
         this.data = null;
-        this.imageMap = [];
         this.imagePositions = [];
         this.currentLesson = null;
         this.currentTopic = null;
@@ -23,7 +22,17 @@ class YogaApp {
     }
 
     async init() {
-        await this.loadData();
+        try {
+            await this.loadData();
+        } catch (error) {
+            console.error('Error loading application data:', error);
+            document.getElementById('contentArea').innerHTML = `
+                <div class="page-content">
+                    <h2>Не удалось загрузить материалы книги</h2>
+                    <p>Запустите приложение через локальный веб-сервер и обновите страницу.</p>
+                </div>`;
+            return;
+        }
         this.applyTheme();
         this.setupEventListeners();
         this.loadUserData();
@@ -33,82 +42,25 @@ class YogaApp {
     }
 
     async loadData() {
-        try {
-            // Load book data
-            const bookResponse = await fetch('data/book.json');
-            if (bookResponse.ok) {
-                this.data = await bookResponse.json();
-            } else {
-                console.warn('Book data not found via fetch');
+        const getJson = async (url, required = true) => {
+            const response = await fetch(url);
+            if (!response.ok) {
+                if (!required) return null;
+                throw new Error(`Не удалось загрузить ${url}: HTTP ${response.status}`);
             }
+            return response.json();
+        };
 
-            // Load image map (for general topic mapping)
-            const imageMapResponse = await fetch('assets/images/image-map.json');
-            if (imageMapResponse.ok) {
-                this.imageMap = await imageMapResponse.json();
-            }
+        [this.data, this.imagePositions, this.practicePlans] = await Promise.all([
+            getJson('data/book.json'),
+            getJson('data/image-positions.json'),
+            getJson('data/practice-plans.json', false)
+        ]);
 
-            // Load precise image positions
-            const posResponse = await fetch('data/image-positions.json');
-            if (posResponse.ok) {
-                this.imagePositions = await posResponse.json();
-            } else {
-                console.warn('Image positions not found via fetch');
-            }
-
-            // Load practice plans
-            try {
-                const plansResponse = await fetch('data/practice-plans.json');
-                if (plansResponse.ok) {
-                    this.practicePlans = await plansResponse.json();
-                }
-            } catch (e) {
-                console.warn('Practice plans not found');
-            }
-
-            if (this.data) {
-                document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
-            } else {
-                this.loadEmbeddedData();
-            }
-        } catch (error) {
-            console.error('Error loading data via fetch:', error);
-            this.loadEmbeddedData();
+        if (!this.data || !this.data.lessons) {
+            throw new Error('Файл data/book.json не содержит структуру уроков.');
         }
-    }
-
-    loadEmbeddedData() {
-        // Check if data is embedded in a script tag (for local file access)
-        const embeddedData = document.getElementById('embeddedBookData');
-        const embeddedImageMap = document.getElementById('embeddedImageMap');
-        const embeddedImagePositions = document.getElementById('embeddedImagePositions');
-
-        if (embeddedData && embeddedData.textContent) {
-            try {
-                this.data = JSON.parse(embeddedData.textContent);
-                document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
-                console.log('Loaded embedded book data successfully');
-            } catch (e) {
-                console.error('Error parsing embedded data:', e);
-            }
-        }
-
-        if (embeddedImageMap && embeddedImageMap.textContent) {
-            try {
-                this.imageMap = JSON.parse(embeddedImageMap.textContent);
-            } catch (e) {}
-        }
-
-        if (embeddedImagePositions && embeddedImagePositions.textContent) {
-            try {
-                this.imagePositions = JSON.parse(embeddedImagePositions.textContent);
-            } catch (e) {}
-        }
-
-        if (!this.data) {
-            console.error('Error loading data: Please run this app via a local server (e.g., python -m http.server) or use VS Code Live Server extension.');
-            this.showToast('Запустите через локальный сервер или используйте Live Server в VS Code');
-        }
+        document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
     }
 
     checkDailyStreak() {
@@ -144,7 +96,12 @@ class YogaApp {
             { id: 'ten_topics', name: 'Ученик', desc: 'Пройдите 10 тем', check: () => Object.keys(this.readProgress).length >= 10 },
             { id: 'streak_3', name: 'Постоянный', desc: '3 дня подряд', check: () => this.dailyStreak >= 3 },
             { id: 'streak_7', name: 'Преданный', desc: '7 дней подряд', check: () => this.dailyStreak >= 7 },
-            { id: 'all_lessons', name: 'Мастер', desc: 'Все уроки пройдены', check: () => Object.keys(this.readProgress).length >= 72 }
+            { id: 'all_lessons', name: 'Мастер', desc: 'Все уроки пройдены', check: () => {
+                const totalTopics = Object.values(this.data.lessons).reduce(
+                    (total, lesson) => total + Object.keys(lesson.topics).length, 0
+                );
+                return Object.keys(this.readProgress).length >= totalTopics;
+            } }
         ];
         
         const savedAchievements = JSON.parse(localStorage.getItem('yogaApp_achievements') || '[]');
@@ -316,11 +273,6 @@ class YogaApp {
     renderTopic(lessonNum, topicNum, topic) {
         const contentArea = document.getElementById('contentArea');
         
-        // Find images for this topic
-        const topicImages = this.imageMap.filter(img =>
-            String(img.lesson) === String(lessonNum) && String(img.topic) === String(topicNum)
-        );
-
         // Check if this is a practice program topic
         let formattedContent = '';
         const isPracticePlan = topic.name.toLowerCase().includes('программа ежедневных занятий');
@@ -329,7 +281,7 @@ class YogaApp {
             formattedContent = this.renderPracticePlanHtml(lessonNum);
         } else {
             // Format the text content with smart image placement based on PDF layout
-            formattedContent = this.formatContent(topic.text, topicImages, topic.start_page);
+            formattedContent = this.formatContent(topic.text, topic.start_page);
         }
 
         const isBookmarked = this.bookmarks.some(b => b.lesson === lessonNum && b.topic === topicNum);
@@ -471,14 +423,14 @@ class YogaApp {
      * Formats book text into HTML, dynamically inserting images from image-positions.json
      * using text anchors for precise placement.
      */
-    formatContent(text, topicImages = [], startPage = 0) {
+    formatContent(text, startPage = 0) {
         if (!text) return '';
 
         // Get precise positions for images in this topic
         const relevantPositions = this.imagePositions.filter(pos =>
             String(pos.lesson) === String(this.currentLesson) &&
             String(pos.topic) === String(this.currentTopic)
-        );
+        ).sort((a, b) => a.pdf_page - b.pdf_page || a.image_filename.localeCompare(b.image_filename));
 
         // Split text by PDF page markers: \n(\d+)\n
         const parts = text.split(/\n(\d+)\n/);
@@ -502,6 +454,9 @@ class YogaApp {
 
                     // Header detection
                     const isHeader = p.match(/^[А-ЯЁ\d\.\s\-]+$/) && p.length < 100 && p === p.toUpperCase();
+                    const normalizedHeading = p.replace(/\n/g, ' ').replace(/\s+/g, ' ').trim().toLocaleLowerCase('ru');
+                    const isBookSubheading = /^(?:поза|подготовка|исходное положение|положение|техника выполнения|выполнение|дыхание|осознание|последовательность|продолжительность занятий|дыхание, осознание и продолжительность|польза практики|благотворное действие|ограничения и предосторожности|противопоказания|примечания|внимание|рекомендации)$/.test(normalizedHeading)
+                        || /^(?:упражнение|вариант|этап)\s+\d+(?:[.:)]\s*.*)?$/.test(normalizedHeading);
 
                     // Check if any image belongs here
                     let imagesToInsert = [];
@@ -521,6 +476,8 @@ class YogaApp {
 
                     if (isHeader) {
                         htmlResult += `<h3>${p.replace(/\n/g, ' ')}</h3>`;
+                    } else if (isBookSubheading) {
+                        htmlResult += `<h4>${p.replace(/\n/g, ' ')}</h4>`;
                     } else {
                         // Join hard-wrapped lines with a space to allow fluid typography
                         // and prevent arbitrary word breaking from manual PDF-style newlines.
@@ -808,7 +765,7 @@ class YogaApp {
 
     renderFrontMatterPage(page) {
         const contentArea = document.getElementById('contentArea');
-        const formattedContent = this.formatContent(page.text, [], page.page);
+        const formattedContent = this.formatContent(page.text, page.page);
         
         contentArea.innerHTML = `
             <div class="page-header">

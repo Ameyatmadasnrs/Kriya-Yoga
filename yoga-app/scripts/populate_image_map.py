@@ -1,54 +1,34 @@
+"""Sync image-to-topic associations from the curated image position records."""
 import json
-import os
+from pathlib import Path
+
 
 def populate():
-    # Load book data to get page ranges for each topic
-    with open('yoga-app/data/book.json', 'r', encoding='utf-8') as f:
-        book_data = json.load(f)
+    root = Path(__file__).resolve().parent.parent
+    map_path = root / "assets" / "images" / "image-map.json"
+    positions_path = root / "data" / "image-positions.json"
+    book_path = root / "data" / "book.json"
 
-    # Load image map
-    image_map_path = 'yoga-app/assets/images/image-map.json'
-    with open(image_map_path, 'r', encoding='utf-8') as f:
-        image_map = json.load(f)
+    image_map = json.loads(map_path.read_text(encoding="utf-8"))
+    positions = json.loads(positions_path.read_text(encoding="utf-8"))
+    book = json.loads(book_path.read_text(encoding="utf-8"))
+    by_filename = {item["image_filename"]: item for item in positions}
 
-    # Flatten book topics with their page ranges
-    topics_ranges = []
-    for lesson_num, lesson in book_data['lessons'].items():
-        for topic_num, topic in lesson['topics'].items():
-            topics_ranges.append({
-                'lesson': lesson_num,
-                'topic': topic_num,
-                'start_page': topic['start_page'],
-                'end_page': topic['end_page'],
-                'name': topic['name']
-            })
-
-    # Update each image in the map
-    for img in image_map:
-        page = img.get('pdf_page')
-        if not page:
+    for image in image_map:
+        position = by_filename.get(image["image_filename"])
+        if position is None:
+            image.update(lesson="", topic="", topic_title="")
             continue
+        image["lesson"] = str(position["lesson"])
+        image["topic"] = str(position["topic"])
+        image["topic_title"] = book["lessons"][str(position["lesson"])]["topics"][str(position["topic"])]["name"]
 
-        # Find which topic this page belongs to
-        found = False
-        for tr in topics_ranges:
-            if tr['start_page'] <= page <= tr['end_page']:
-                img['lesson'] = tr['lesson']
-                img['topic'] = tr['topic']
-                img['topic_title'] = tr['name']
-                found = True
-                break
+    map_path.write_text(
+        json.dumps(image_map, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    print(f"Synchronized {len(image_map)} image records from curated positions.")
 
-        if not found:
-            # Maybe it's a cover or front matter
-            img['lesson'] = ""
-            img['topic'] = ""
-
-    # Save updated image map
-    with open(image_map_path, 'w', encoding='utf-8') as f:
-        json.dump(image_map, f, ensure_ascii=False, indent=2)
-
-    print(f"Updated {len(image_map)} images in image-map.json")
 
 if __name__ == "__main__":
     populate()
