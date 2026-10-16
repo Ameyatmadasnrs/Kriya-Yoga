@@ -386,10 +386,16 @@ class YogaApp {
         document.getElementById('prevBtn').addEventListener('click', () => this.navigateTopic(-1));
         document.getElementById('nextBtn').addEventListener('click', () => this.navigateTopic(1));
 
-        // Start each topic at its heading; avoid the smooth-scroll transition
-        // leaving the previous position visible after the content is replaced.
-        document.getElementById('mainContent').scrollTop = 0;
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        // Reset both possible scroll containers after replacing the page, then
+        // align the actual topic heading below the sticky toolbar.
+        const mainContent = document.getElementById('mainContent');
+        const topicHeading = contentArea.querySelector('.topic-page-header');
+        mainContent.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        requestAnimationFrame(() => {
+            topicHeading?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        });
     }
 
     navigateTopic(direction) {
@@ -501,6 +507,14 @@ class YogaApp {
 
         let htmlResult = '';
         let placedImages = new Set();
+        let firstContentParagraph = true;
+        const topicData = this.data.lessons[this.currentLesson]?.topics[this.currentTopic];
+        const topicNameKey = topicData?.name
+            ?.toLocaleLowerCase('ru')
+            .replace(/[^а-яёa-z0-9]/g, '') || '';
+        const headingKey = value => value
+            .toLocaleLowerCase('ru')
+            .replace(/[^а-яёa-z0-9]/g, '');
 
         for (let i = 0; i < parts.length; i++) {
             if (i % 2 === 0) {
@@ -544,9 +558,35 @@ class YogaApp {
                     } else {
                         // Join hard-wrapped lines with a space to allow fluid typography
                         // and prevent arbitrary word breaking from manual PDF-style newlines.
-                        let formattedText = p.replace(/\n/g, ' ');
-                        htmlResult += `<p>${formattedText}</p>`;
+                        let displayParagraph = p;
+                        if (firstContentParagraph) {
+                            const lines = displayParagraph.split('\n');
+                            const removedLines = new Set();
+                            let lineIndex = 0;
+                            const lessonHeading = lines[lineIndex]?.match(/^Урок\s+\d+\.\s*(.+)$/i);
+
+                            if (lessonHeading && headingKey(lessonHeading[1]) === topicNameKey) {
+                                removedLines.add(lineIndex++);
+                            }
+
+                            if (/^Тема\s+\d+\s*$/i.test(lines[lineIndex]?.trim() || '')) {
+                                removedLines.add(lineIndex++);
+                                if (headingKey(lines[lineIndex] || '') === topicNameKey) {
+                                    removedLines.add(lineIndex);
+                                }
+                            } else if (headingKey(lines[lineIndex] || '') === topicNameKey) {
+                                removedLines.add(lineIndex);
+                            }
+
+                            if (removedLines.size) {
+                                displayParagraph = lines.filter((_, index) => !removedLines.has(index)).join('\n').trim();
+                            }
+                        }
+
+                        let formattedText = displayParagraph.replace(/\n/g, ' ');
+                        if (formattedText.trim()) htmlResult += `<p>${formattedText}</p>`;
                     }
+                    firstContentParagraph = false;
 
                     // Insert images AFTER the paragraph containing their anchor
                     imagesToInsert.forEach(pos => {
