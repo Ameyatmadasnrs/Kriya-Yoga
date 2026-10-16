@@ -353,9 +353,12 @@ class YogaApp {
         const isFavorite = this.favorites.some(f => f.lesson === lessonNum && f.topic === topicNum);
         
         contentArea.innerHTML = `
-            <div class="page-header">
-                <h1>Урок ${lessonNum}</h1>
-                <div class="subtitle">Тема ${topicNum}: ${topic.name}</div>
+            <div class="page-header topic-page-header">
+                <div class="lesson-kicker">Урок ${lessonNum}</div>
+                <div class="page-heading-group">
+                    <h1>${topic.name}</h1>
+                    <div class="subtitle">Тема ${topicNum}</div>
+                </div>
             </div>
             
             <div class="page-content">
@@ -383,9 +386,10 @@ class YogaApp {
         document.getElementById('prevBtn').addEventListener('click', () => this.navigateTopic(-1));
         document.getElementById('nextBtn').addEventListener('click', () => this.navigateTopic(1));
 
-        // Scroll to top - ensure both container and window scroll
+        // Start each topic at its heading; avoid the smooth-scroll transition
+        // leaving the previous position visible after the content is replaced.
         document.getElementById('mainContent').scrollTop = 0;
-        window.scrollTo(0, 0);
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
 
     navigateTopic(direction) {
@@ -496,12 +500,11 @@ class YogaApp {
         const parts = text.split(/\n(\d+)\n/);
 
         let htmlResult = '';
-        let currentPage = parseInt(startPage);
         let placedImages = new Set();
 
         for (let i = 0; i < parts.length; i++) {
             if (i % 2 === 0) {
-                // This is a block of text belonging to currentPage
+                // This is a block of book text between source page markers.
                 let segmentText = parts[i];
                 if (!segmentText.trim()) continue;
 
@@ -550,11 +553,6 @@ class YogaApp {
                         htmlResult += this.generateImageHtmlFromPos(pos);
                     });
                 });
-            } else {
-                // Page marker
-                const pageNum = parseInt(parts[i]);
-                htmlResult += `<div class="page-break-marker" title="PDF Page ${pageNum}"></div>`;
-                currentPage = pageNum + 1;
             }
         }
 
