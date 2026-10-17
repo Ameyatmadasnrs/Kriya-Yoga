@@ -550,6 +550,7 @@ class YogaApp {
             const caption = String(pos.caption || '').trim();
             if (!caption || /^логотип\s*:/i.test(caption)) return;
             exerciseHeadings.add(headingKey(caption));
+            exerciseHeadings.add(headingKey(caption.split('(')[0]));
             exerciseHeadings.add(headingKey(caption.replace(/^техника выполнения\s+/i, '')));
             exerciseHeadings.add(headingKey(caption.replace(/\s*\([^)]*\)\s*$/, '')));
         });
@@ -587,12 +588,14 @@ class YogaApp {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
-        // These six splits occur exactly at hard OCR line breaks and form
-        // unambiguous words when joined. Apply only in rendered text; preserve
-        // the original OCR string for search and future source comparison.
+        // These splits were checked against the source PDF. Join only these
+        // confirmed line-wrap fragments in rendered text; keep book data intact.
         const knownLineWrapSplits = new Set([
             'постепен но', 'расслабля ет', 'образу ет',
-            'приветству ют', 'чрезмер но', 'оттачива ется'
+            'приветству ют', 'чрезмер но', 'оттачива ется',
+            'упражне нии', 'наклоняй те', 'выпол нения', 'коленя ми',
+            'поверни те', 'мож но', 'под держания', 'напри мер',
+            'одно временно', 'ко нец', 'воспользовать ся', 'ко лено'
         ]);
         const joinWrappedLines = lines => {
             let text = '';
@@ -600,7 +603,7 @@ class YogaApp {
                 let next = line.trim();
                 if (!next) return;
                 const left = text.match(/([А-Яа-яЁё]+)$/);
-                const right = next.match(/^([А-Яа-яЁё]+)(?=\s|$)/);
+                const right = next.match(/^([А-Яа-яЁё]+)(?=[^А-Яа-яЁё]|$)/);
                 const splitKey = left && right
                     ? `${left[1].toLocaleLowerCase('ru')} ${right[1].toLocaleLowerCase('ru')}`
                     : '';
@@ -608,7 +611,7 @@ class YogaApp {
                     text = text.slice(0, -left[1].length) + left[1] + right[1];
                     next = next.slice(right[1].length).trimStart();
                 }
-                if (next) text += `${text ? ' ' : ''}${next}`;
+                if (next) text += `${text && !/^[,.;:!?)]/.test(next) ? ' ' : ''}${next}`;
             });
             return text.replace(/\s+/g, ' ').trim();
         };
@@ -635,7 +638,7 @@ class YogaApp {
 
             lines.forEach(line => {
                 const normalized = headingKey(line);
-                const isSection = isSectionHeading(line);
+                const isSection = isSectionHeading(line) && !/[.!?…][»”\"')\]]?$/.test(line.trim());
                 const isExercise = exerciseHeadings.has(normalized);
                 const isPrintedTopicHeading = /^Урок\s+\d+\.\s*\S/i.test(line)
                     || /(?:\.\s*){2,}/.test(line);
@@ -656,7 +659,13 @@ class YogaApp {
                     flushBody();
                     listItems.push(numberedItem[1]);
                 } else if (listItems.length) {
-                    listItems[listItems.length - 1] += `\n${line}`;
+                    const startsNewParagraph = /^(?:Эти|Все|Кроме того|В целом|В результате|Поэтому|Однако|Теперь|На самом деле|В данном случае|Именно|Существуют|Процедура|Начинайте|Не следует)(?:\s|$)/.test(line);
+                    if (startsNewParagraph) {
+                        flushList();
+                        bodyLines.push(line);
+                    } else {
+                        listItems[listItems.length - 1] += `\n${line}`;
+                    }
                 } else {
                     bodyLines.push(line);
                 }
@@ -690,91 +699,311 @@ class YogaApp {
                     return true;
                 }).join('\n');
             }
-            pageSegments.push(segmentText);
+            pageSegments.push({
+                page: i > 0 ? Number(parts[i - 1]) : null,
+                text: segmentText
+            });
         }
 
-        // A page break is only a hard line break. Joining the cleaned segments
-        // before paragraph splitting lets sentences continue across a removed
-        // running head while preserving real blank-line paragraph boundaries.
-        const paragraphs = pageSegments.join('\n').split(/\n\n+/);
-        paragraphs.forEach(p => {
-            p = p.trim();
-            if (!p) return;
+        // A few confirmed OCR line wraps fall exactly across a printed-page
+        // marker. Join only the whitelisted fragments, leaving all other page
+        // boundaries and source text untouched.
+        for (let index = 1; index < pageSegments.length; index++) {
+            const previousLines = pageSegments[index - 1].text.split('\n');
+            const currentLines = pageSegments[index].text.split('\n');
+            let previousLineIndex = previousLines.length - 1;
+            while (previousLineIndex >= 0 && !previousLines[previousLineIndex].trim()) previousLineIndex--;
+            const currentLineIndex = currentLines.findIndex(line => line.trim());
+            if (previousLineIndex < 0 || currentLineIndex < 0) continue;
 
-            // Check if any image belongs here
-            const imagesToInsert = [];
-            const normalize = (t) => t.replace(/[^а-яёa-z0-9]/gi, '').toLowerCase();
-            const normalizedP = normalize(p);
+            const leftMatch = previousLines[previousLineIndex].match(/([А-Яа-яЁё]+)\s*$/);
+            const rightMatch = currentLines[currentLineIndex].match(/^\s*([А-Яа-яЁё]+)(?=[^А-Яа-яЁё]|$)/);
+            if (!leftMatch || !rightMatch) continue;
 
-            relevantPositions.forEach(pos => {
-                if (!placedImages.has(pos.image_filename)) {
-                    const normalizedAnchor = normalize(pos.anchor_text);
-                    // Search for anchor text in the paragraph
-                    if (normalizedP.includes(normalizedAnchor)) {
-                        imagesToInsert.push(pos);
-                        placedImages.add(pos.image_filename);
-                    }
-                }
-            });
+            const splitKey = `${leftMatch[1].toLocaleLowerCase('ru')} ${rightMatch[1].toLocaleLowerCase('ru')}`;
+            if (!knownLineWrapSplits.has(splitKey)) continue;
 
+            previousLines[previousLineIndex] = previousLines[previousLineIndex].replace(
+                /([А-Яа-яЁё]+)\s*$/,
+                (_, fragment) => `${fragment}${rightMatch[1]}`
+            );
+            currentLines[currentLineIndex] = currentLines[currentLineIndex].replace(
+                /^\s*[А-Яа-яЁё]+/,
+                ''
+            );
+            pageSegments[index - 1].text = previousLines.join('\n');
+            pageSegments[index].text = currentLines.join('\n');
+        }
 
-            let displayParagraph = p;
-            if (firstContentParagraph) {
-                const lines = displayParagraph.split('\n');
-                let lineIndex = 0;
-                while (lineIndex < lines.length && !lines[lineIndex].trim()) lineIndex++;
+        // Keep page numbers while cleaning the text so repeated or short anchors
+        // can be resolved near the page where the source places the illustration.
+        const paragraphEntries = [];
+        pageSegments.forEach(({ page, text }) => {
+            text.split(/\n\n+/).forEach(paragraph => {
+                let displayParagraph = paragraph.trim();
+                if (!displayParagraph) return;
 
-                const lessonHeading = lines[lineIndex]?.trim().match(/^Урок\s+\d+\.\s*(.+)$/i);
-                if (lessonHeading && headingKey(lessonHeading[1]) === topicNameKey) {
-                    lines.splice(lineIndex, 1);
-                }
-
-                // The app already supplies the lesson/topic locator.
-                // Remove only the source locator line; preserve a printed
-                // heading if OCR differs from the topic metadata.
-                const topicLocatorIndex = lines.findIndex((line, index) =>
-                    index <= lineIndex + 2 && /^Тема\s+\d+\s*$/i.test(line.trim())
-                );
-                if (topicLocatorIndex !== -1) lines.splice(topicLocatorIndex, 1);
-
-                // A printed topic title can wrap across multiple OCR lines or
-                // appear twice. Suppress only a prefix that normalizes exactly
-                // to the existing topic metadata.
-                for (let pass = 0; pass < 3 && topicNameKey; pass++) {
+                if (firstContentParagraph) {
+                    const lines = displayParagraph.split('\n');
+                    let lineIndex = 0;
                     while (lineIndex < lines.length && !lines[lineIndex].trim()) lineIndex++;
-                    let combinedTitle = '';
-                    let matchedEnd = -1;
-                    for (let index = lineIndex; index < Math.min(lines.length, lineIndex + 4); index++) {
-                        if (!lines[index].trim()) break;
-                        combinedTitle += lines[index];
-                        const candidateKey = headingKey(combinedTitle);
-                        if (candidateKey === topicNameKey) {
-                            matchedEnd = index;
-                            break;
-                        }
-                        if (!topicNameKey.startsWith(candidateKey)) break;
+
+                    const lessonHeading = lines[lineIndex]?.trim().match(/^Урок\s+\d+\.\s*(.+)$/i);
+                    if (lessonHeading && headingKey(lessonHeading[1]) === topicNameKey) {
+                        lines.splice(lineIndex, 1);
                     }
-                    if (matchedEnd < 0) break;
-                    lines.splice(lineIndex, matchedEnd - lineIndex + 1);
+
+                    const topicLocatorIndex = lines.findIndex((line, index) =>
+                        index <= lineIndex + 2 && /^Тема\s+\d+\s*$/i.test(line.trim())
+                    );
+                    if (topicLocatorIndex !== -1) lines.splice(topicLocatorIndex, 1);
+
+                    for (let pass = 0; pass < 3 && topicNameKey; pass++) {
+                        while (lineIndex < lines.length && !lines[lineIndex].trim()) lineIndex++;
+                        let combinedTitle = '';
+                        let matchedEnd = -1;
+                        for (let index = lineIndex; index < Math.min(lines.length, lineIndex + 4); index++) {
+                            if (!lines[index].trim()) break;
+                            combinedTitle += lines[index];
+                            const candidateKey = headingKey(combinedTitle);
+                            if (candidateKey === topicNameKey) {
+                                matchedEnd = index;
+                                break;
+                            }
+                            if (!topicNameKey.startsWith(candidateKey)) break;
+                        }
+                        if (matchedEnd < 0) break;
+                        lines.splice(lineIndex, matchedEnd - lineIndex + 1);
+                    }
+
+                    displayParagraph = lines.join('\n').trim();
                 }
 
-                displayParagraph = lines.join('\n').trim();
-            }
-
-            if (displayParagraph) htmlResult += renderParagraph(displayParagraph);
-            firstContentParagraph = false;
-
-            // Insert images AFTER the paragraph containing their anchor
-            imagesToInsert.forEach(pos => {
-                htmlResult += this.generateImageHtmlFromPos(pos);
+                firstContentParagraph = false;
+                if (displayParagraph) paragraphEntries.push({ page, text: displayParagraph });
             });
         });
 
-        // Safety: Insert any images that were matched to this topic but NOT placed via anchors
+        const normalizeWithOffsets = value => {
+            let normalized = '';
+            const offsets = [];
+            for (let index = 0; index < value.length; index++) {
+                const char = value[index].toLocaleLowerCase('ru');
+                if (/[а-яёa-z0-9]/i.test(char)) {
+                    normalized += char;
+                    offsets.push(index);
+                }
+            }
+            return { normalized, offsets };
+        };
+        const findNormalizedMatches = (value, search) => {
+            const haystack = normalizeWithOffsets(value);
+            const needle = normalizeWithOffsets(search).normalized;
+            if (!needle) return [];
+            const matches = [];
+            let index = haystack.normalized.indexOf(needle);
+            while (index !== -1) {
+                matches.push({
+                    start: haystack.offsets[index],
+                    end: haystack.offsets[index + needle.length - 1] + 1
+                });
+                index = haystack.normalized.indexOf(needle, index + needle.length);
+            }
+            return matches;
+        };
+        const isExerciseHeadingLine = line => {
+            const key = headingKey(line);
+            return Boolean(key) && !isSectionHeading(line)
+                && (exerciseHeadings.has(key)
+                    || /^(?:позиция|положение)\s*\d+(?:.*)?$/i.test(line.trim()));
+        };
+
+        // Translate each image anchor to one text location, preferring the page
+        // nearest its source-page metadata. This prevents common words such as
+        // "дыхание" from binding to the first unrelated occurrence in a topic.
+        const lineEntries = [];
+        let globalOffset = 0;
+        paragraphEntries.forEach((entry, entryIndex) => {
+            entry.globalOffset = globalOffset;
+            let lineOffset = 0;
+            entry.text.split('\n').forEach(line => {
+                const start = lineOffset;
+                if (line.trim()) {
+                    lineEntries.push({
+                        entryIndex,
+                        start,
+                        end: start + line.length,
+                        globalStart: globalOffset + start,
+                        page: entry.page,
+                        text: line.trim()
+                    });
+                }
+                lineOffset += line.length + 1;
+            });
+            globalOffset += entry.text.length + 2;
+        });
+
+        const imageEvents = new Map();
+        const unresolved = [];
+        const addImageEvent = (entryIndex, offset, pos) => {
+            const events = imageEvents.get(entryIndex) || [];
+            events.push({ offset: Math.max(0, offset), pos, order: relevantPositions.indexOf(pos) });
+            imageEvents.set(entryIndex, events);
+            placedImages.add(pos.image_filename);
+        };
+
+        const captionHeadingMatches = (lineEntry, caption) => {
+            const line = lineEntry.text;
+            const captionText = String(caption || '').replace(/^техника выполнения\s+/i, '').trim();
+            const fullKey = headingKey(captionText);
+            const baseText = captionText.split('(')[0].trim();
+            const baseKey = headingKey(baseText);
+            const lineKey = headingKey(line);
+
+            const stage = captionText.match(/стадия\s*(\d+)/i);
+            if (stage && lineKey === headingKey(`Стадия ${stage[1]}`)) {
+                const previousExercise = lineEntries.filter(candidate =>
+                    candidate.globalStart < lineEntry.globalStart
+                    && isExerciseHeadingLine(candidate.text)
+                ).at(-1);
+                const previousKey = headingKey(previousExercise?.text || '');
+                return previousKey === baseKey || previousKey.includes(baseKey);
+            }
+
+            if (!isExerciseHeadingLine(line)) return false;
+            if (fullKey && lineKey === fullKey) return true;
+            if (baseKey.length >= 5 && (lineKey === baseKey || lineKey.includes(baseKey))) return true;
+
+            const position = captionText.match(/позиция\s*(\d+)/i);
+            if (position && new RegExp(`^(?:позиция|положение)${position[1]}`).test(lineKey)) return true;
+            return false;
+        };
+
         relevantPositions.forEach(pos => {
-            if (!placedImages.has(pos.image_filename)) {
-                htmlResult += this.generateImageHtmlFromPos(pos);
-                placedImages.add(pos.image_filename);
+            let candidates = [];
+            paragraphEntries.forEach((entry, entryIndex) => {
+                findNormalizedMatches(entry.text, pos.anchor_text || '').forEach(match => {
+                    const pageDistance = entry.page !== null && entry.page !== undefined
+                        ? Math.abs(Number(entry.page) - Number(pos.pdf_page))
+                        : Number.POSITIVE_INFINITY;
+                    candidates.push({ ...match, entryIndex, pageDistance,
+                        globalStart: entry.globalOffset + match.start });
+                });
+            });
+
+            let anchor = null;
+            if (candidates.length) {
+                candidates.sort((a, b) => a.pageDistance - b.pageDistance || a.globalStart - b.globalStart);
+                anchor = candidates[0];
+            }
+
+            const caption = String(pos.caption || '').trim();
+            if (/^логотип\s*:/i.test(caption)) {
+                addImageEvent(0, 0, pos);
+                return;
+            }
+
+            let heading = null;
+            const matchingHeadings = /^техника выполнения\s+/i.test(caption)
+                ? []
+                : lineEntries.filter(line => captionHeadingMatches(line, caption));
+            if (matchingHeadings.length) {
+                matchingHeadings.sort((a, b) => {
+                    if (anchor) {
+                        return Math.abs(a.globalStart - anchor.globalStart)
+                            - Math.abs(b.globalStart - anchor.globalStart);
+                    }
+                    const distance = line => line.page !== null && line.page !== undefined
+                        ? Math.abs(Number(line.page) - Number(pos.pdf_page))
+                        : Number.POSITIVE_INFINITY;
+                    return distance(a) - distance(b) || a.globalStart - b.globalStart;
+                });
+                heading = matchingHeadings[0];
+            }
+
+            if (heading) {
+                const captionStage = caption.match(/стадия\s*(\d+)/i);
+                const captionHasStage = Boolean(captionStage);
+                let nextHeading = lineEntries.find(line =>
+                    line.globalStart > heading.globalStart
+                    && isExerciseHeadingLine(line.text)
+                );
+                if (captionHasStage) {
+                    nextHeading = lineEntries.find(line =>
+                        line.globalStart > heading.globalStart
+                        && new RegExp(`^стадия${Number(captionStage[1]) + 1}$`).test(headingKey(line.text))
+                    ) || lineEntries.find(line =>
+                        line.globalStart > heading.globalStart
+                        && headingKey(line.text) === headingKey('Примечания')
+                    ) || nextHeading;
+                }
+                // The last exercise in a topic has no following exercise title;
+                // place its figure before the notes rather than after the topic.
+                if (!nextHeading) {
+                    nextHeading = lineEntries.find(line =>
+                        line.globalStart > heading.globalStart
+                        && headingKey(line.text) === headingKey('Примечания')
+                    );
+                }
+                if (nextHeading) {
+                    addImageEvent(nextHeading.entryIndex, nextHeading.start, pos);
+                } else {
+                    const lastIndex = paragraphEntries.length - 1;
+                    addImageEvent(lastIndex, paragraphEntries[lastIndex]?.text.length || 0, pos);
+                }
+                return;
+            }
+
+            if (anchor) {
+                const entry = paragraphEntries[anchor.entryIndex];
+                const remainder = entry.text.slice(anchor.end);
+                const sentenceEnd = remainder.search(/[.!?](?:[»”\"')\]]*)?(?=\s|$)/);
+                const lineEnd = entry.text.indexOf('\n', anchor.end);
+                let offset = sentenceEnd >= 0
+                    ? anchor.end + sentenceEnd + 1
+                    : lineEnd >= 0 ? lineEnd : entry.text.length;
+                if (offset <= anchor.end) offset = entry.text.length;
+                addImageEvent(anchor.entryIndex, offset, pos);
+                return;
+            }
+
+            unresolved.push({
+                image: pos.image_filename,
+                lesson: this.currentLesson,
+                topic: this.currentTopic,
+                page: pos.pdf_page,
+                anchor: pos.anchor_text || '',
+                reason: 'Anchor and caption heading were not found in the topic text'
+            });
+        });
+
+        this.unresolvedImagePositions = this.unresolvedImagePositions || [];
+        this.unresolvedImagePositions = this.unresolvedImagePositions.filter(item =>
+            !(String(item.lesson) === String(this.currentLesson)
+                && String(item.topic) === String(this.currentTopic))
+        ).concat(unresolved);
+        if (unresolved.length) {
+            console.warn('Unresolved image positions for this topic:', unresolved);
+        }
+
+        paragraphEntries.forEach((entry, entryIndex) => {
+            const events = (imageEvents.get(entryIndex) || []).sort((a, b) => a.offset - b.offset || a.order - b.order);
+            let cursor = 0;
+            for (let index = 0; index < events.length;) {
+                const offset = Math.min(entry.text.length, events[index].offset);
+                if (offset > cursor) htmlResult += renderParagraph(entry.text.slice(cursor, offset));
+                const group = [];
+                while (index < events.length && Math.min(entry.text.length, events[index].offset) === offset) {
+                    group.push(events[index].pos);
+                    index++;
+                }
+                group.forEach(pos => { htmlResult += this.generateImageHtmlFromPos(pos); });
+                cursor = Math.max(cursor, offset);
+            }
+            if (events.length) {
+                if (cursor < entry.text.length) htmlResult += renderParagraph(entry.text.slice(cursor));
+            } else {
+                htmlResult += renderParagraph(entry.text);
             }
         });
 
