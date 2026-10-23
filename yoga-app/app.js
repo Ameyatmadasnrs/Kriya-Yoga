@@ -639,6 +639,18 @@ class YogaApp {
             'чашеч кой', 'чрезмер но', 'энтузиаз мом',
             'это го', 'эф фективно'
         ]);
+        // These additional splits were confirmed at printed-page boundaries
+        // in the source PDF. Keep them page-scoped so ordinary phrases such as
+        // «что бы» elsewhere in the book are never joined by a broad rule.
+        const knownPageWrapSplits = new Set([
+            'предва рительная', 'энергети ческий', 'воспроиз водства',
+            'элект рических', 'психи ческих', 'предосторож ности',
+            'выпол няется', 'пола гаем', 'есте ственная', 'предла гать',
+            'сосредото чиваться', 'пере живать', 'фено мены',
+            'взаи модействии', 'устанавли вается', 'что бы',
+            'испыты вали', 'подав ляйте', 'психоло гически',
+            'соответ ствует', 'обеспе чивает', 'потра тили'
+        ]);
         const joinWrappedLines = lines => {
             let text = '';
             lines.flatMap(line => String(line).split('\n')).forEach(line => {
@@ -747,9 +759,10 @@ class YogaApp {
             });
         }
 
-        // A few confirmed OCR line wraps fall exactly across a printed-page
-        // marker. Join only the whitelisted fragments, leaving all other page
-        // boundaries and source text untouched.
+        // Confirmed OCR word wraps can cross a printed-page boundary. Join
+        // only whitelisted fragments, then keep their continued paragraph
+        // together in the reader instead of showing a false paragraph gap.
+        const continuedPageBreaks = new Set();
         for (let index = 1; index < pageSegments.length; index++) {
             const previousLines = pageSegments[index - 1].text.split('\n');
             const currentLines = pageSegments[index].text.split('\n');
@@ -758,29 +771,44 @@ class YogaApp {
             const currentLineIndex = currentLines.findIndex(line => line.trim());
             if (previousLineIndex < 0 || currentLineIndex < 0) continue;
 
-            const leftMatch = previousLines[previousLineIndex].match(/([А-Яа-яЁё]+)\s*$/);
-            const rightMatch = currentLines[currentLineIndex].match(/^\s*([А-Яа-яЁё]+)(?=[^А-Яа-яЁё]|$)/);
-            if (!leftMatch || !rightMatch) continue;
+            const leftLine = previousLines[previousLineIndex].trimEnd();
+            const rightLine = currentLines[currentLineIndex].trimStart();
+            const leftMatch = leftLine.match(/([А-Яа-яЁё]+)$/);
+            const rightMatch = rightLine.match(/^([А-Яа-яЁё]+)(?=[^А-Яа-яЁё]|$)/);
+            const splitKey = leftMatch && rightMatch
+                ? `${leftMatch[1].toLocaleLowerCase('ru')} ${rightMatch[1].toLocaleLowerCase('ru')}`
+                : '';
+            const isKnownWordWrap = Boolean(splitKey
+                && (knownLineWrapSplits.has(splitKey) || knownPageWrapSplits.has(splitKey)));
+            const startsAsBodyContinuation = /^[а-яё]/.test(rightLine)
+                && !/[.!?…:][»”"')\]]?$/.test(leftLine)
+                && !isSectionHeading(rightLine)
+                && !/^\d+[.)]\s/.test(rightLine)
+                && !/^[-–—*]\s/.test(rightLine);
 
-            const splitKey = `${leftMatch[1].toLocaleLowerCase('ru')} ${rightMatch[1].toLocaleLowerCase('ru')}`;
-            if (!knownLineWrapSplits.has(splitKey)) continue;
+            // Page-top text beginning in lower case and following an unfinished
+            // sentence continues the prior paragraph even when no word was split.
+            if (!isKnownWordWrap && !startsAsBodyContinuation) continue;
 
-            previousLines[previousLineIndex] = previousLines[previousLineIndex].replace(
-                /([А-Яа-яЁё]+)\s*$/,
-                (_, fragment) => `${fragment}${rightMatch[1]}`
-            );
-            currentLines[currentLineIndex] = currentLines[currentLineIndex].replace(
-                /^\s*[А-Яа-яЁё]+/,
-                ''
-            );
-            pageSegments[index - 1].text = previousLines.join('\n');
-            pageSegments[index].text = currentLines.join('\n');
+            if (isKnownWordWrap && leftMatch && rightMatch) {
+                previousLines[previousLineIndex] = previousLines[previousLineIndex].replace(
+                    /([А-Яа-яЁё]+)$/,
+                    (_, fragment) => `${fragment}${rightMatch[1]}`
+                );
+                currentLines[currentLineIndex] = currentLines[currentLineIndex].replace(
+                    /^\s*[А-Яа-яЁё]+/,
+                    ''
+                );
+                pageSegments[index - 1].text = previousLines.join('\n');
+                pageSegments[index].text = currentLines.join('\n');
+            }
+            continuedPageBreaks.add(index);
         }
 
         // Keep page numbers while cleaning the text so repeated or short anchors
         // can be resolved near the page where the source places the illustration.
         const paragraphEntries = [];
-        pageSegments.forEach(({ page, text }) => {
+        pageSegments.forEach(({ page, text }, segmentIndex) => {
             text.split(/\n\n+/).forEach(paragraph => {
                 let displayParagraph = paragraph.trim();
                 if (!displayParagraph) return;
@@ -822,8 +850,31 @@ class YogaApp {
                 }
 
                 firstContentParagraph = false;
-                if (displayParagraph) paragraphEntries.push({ page, text: displayParagraph });
+                if (displayParagraph) paragraphEntries.push({
+                    page, text: displayParagraph, segmentIndex,
+                    pageSpans: [{ start: 0, end: displayParagraph.length, page }]
+                });
             });
+        });
+
+        // Join a confirmed word wrap or clear sentence continuation across pages.
+        // Preserve source-page spans so image-anchor resolution still uses the
+        // correct PDF page even though the reader presents one continuous p.
+        [...continuedPageBreaks].sort((a, b) => b - a).forEach(segmentIndex => {
+            const leftIndex = paragraphEntries.map((entry, index) =>
+                entry.segmentIndex === segmentIndex - 1 ? index : -1
+            ).filter(index => index >= 0).at(-1);
+            const rightIndex = paragraphEntries.findIndex(entry => entry.segmentIndex === segmentIndex);
+            if (leftIndex < 0 || rightIndex < 0 || leftIndex >= rightIndex) return;
+
+            const left = paragraphEntries[leftIndex];
+            const right = paragraphEntries[rightIndex];
+            const offset = left.text.length + 1;
+            left.text += `\n${right.text}`;
+            left.pageSpans.push(...right.pageSpans.map(span => ({
+                start: span.start + offset, end: span.end + offset, page: span.page
+            })));
+            paragraphEntries.splice(rightIndex, 1);
         });
 
         const normalizeWithOffsets = value => {
@@ -863,6 +914,10 @@ class YogaApp {
         // Translate each image anchor to one text location, preferring the page
         // nearest its source-page metadata. This prevents common words such as
         // "дыхание" from binding to the first unrelated occurrence in a topic.
+        const pageAtOffset = (entry, offset) => {
+            const span = entry.pageSpans?.find(item => offset >= item.start && offset < item.end);
+            return span?.page ?? entry.page;
+        };
         const lineEntries = [];
         let globalOffset = 0;
         paragraphEntries.forEach((entry, entryIndex) => {
@@ -876,7 +931,7 @@ class YogaApp {
                         start,
                         end: start + line.length,
                         globalStart: globalOffset + start,
-                        page: entry.page,
+                        page: pageAtOffset(entry, start),
                         text: line.trim()
                     });
                 }
@@ -925,8 +980,9 @@ class YogaApp {
             let candidates = [];
             paragraphEntries.forEach((entry, entryIndex) => {
                 findNormalizedMatches(entry.text, pos.anchor_text || '').forEach(match => {
-                    const pageDistance = entry.page !== null && entry.page !== undefined
-                        ? Math.abs(Number(entry.page) - Number(pos.pdf_page))
+                    const anchorPage = pageAtOffset(entry, match.start);
+                    const pageDistance = anchorPage !== null && anchorPage !== undefined
+                        ? Math.abs(Number(anchorPage) - Number(pos.pdf_page))
                         : Number.POSITIVE_INFINITY;
                     candidates.push({ ...match, entryIndex, pageDistance,
                         globalStart: entry.globalOffset + match.start });
