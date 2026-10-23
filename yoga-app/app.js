@@ -535,7 +535,8 @@ class YogaApp {
             'дополнительные подробности', 'упоминания в древних текстах',
             'различные методы регулирования праны', 'анатомия', 'мантра',
             'словесные инструкции', 'положение тела', 'начальное положение',
-            'конечное положение', 'основные положения', 'ограничения и противопоказания'
+            'конечное положение', 'основные положения', 'ограничения и противопоказания',
+            'приготовления', 'количество повторений'
         ].map(headingKey));
 
         // Exercise names and image captions already present in the book data are
@@ -580,7 +581,7 @@ class YogaApp {
         const isSectionHeading = line => {
             const normalized = headingKey(line);
             return sectionHeadings.has(normalized)
-                || /^(?:упражнение|вариант|этап|стадия|часть)\s*\d+(?:.*)?$/i.test(line.trim());
+                || /^(?:упражнение|вариант|этап|стадия|часть|движение)\s*\d+(?:.*)?$/i.test(line.trim());
         };
 
         const escapeText = value => value
@@ -591,11 +592,52 @@ class YogaApp {
         // These splits were checked against the source PDF. Join only these
         // confirmed line-wrap fragments in rendered text; keep book data intact.
         const knownLineWrapSplits = new Set([
-            'постепен но', 'расслабля ет', 'образу ет',
-            'приветству ют', 'чрезмер но', 'оттачива ется',
-            'упражне нии', 'наклоняй те', 'выпол нения', 'коленя ми',
-            'поверни те', 'мож но', 'под держания', 'напри мер',
-            'одно временно', 'ко нец', 'воспользовать ся', 'ко лено'
+            'автома тически', 'бес сознательный', 'био плазменное',
+            'биолюми несценции', 'бо лее', 'бо лезнях',
+            'бы тия', 'быва ет', 'важ ные',
+            'ви дим', 'внеш нем', 'внутрен ней',
+            'внутрен ний', 'во прос', 'возмож но',
+            'воспользовать ся', 'вспы шек', 'встречавшее ся',
+            'вы дох', 'вы сокое', 'выпол нения',
+            'выс шим', 'высо ким', 'го ловы',
+            'гото вы', 'движе нии', 'де лая',
+            'дей ствуют', 'дейст вия', 'действи тельности',
+            'действо вать', 'до стичь', 'ежеднев но',
+            'за метите', 'за нятие', 'заболевания ми',
+            'зависимос ти', 'заме нить', 'зре ния',
+            'йо га', 'йо ге', 'каж дый',
+            'кни ги', 'ко лено', 'ко нец',
+            'ко торой', 'ко торые', 'коленя ми',
+            'конкрет но', 'кото рые', 'край ней',
+            'лю дей', 'мед ленно', 'менструаль ных',
+            'ми зинец', 'мож но', 'на правлены',
+            'на пример', 'наблюдате лем', 'наклоняй те',
+            'напри мер', 'неестест венно', 'некото рым',
+            'необходи мую', 'непосредственно го', 'нормаль ное',
+            'об ласти', 'об ратной', 'облегче ния',
+            'образу ет', 'объек ты', 'ограничен ной',
+            'одно временно', 'одновремен но', 'ожи дать',
+            'ор ганизмом', 'особенно сти', 'осозна нием',
+            'от вет', 'от личаются', 'оттачива ется',
+            'очи щенной', 'переста ли', 'перечислен ных',
+            'по верхностью', 'по рождается', 'по скольку',
+            'поверни те', 'под готовкой', 'под держания',
+            'покоит ся', 'пол ностью', 'последст вия',
+            'постепен но', 'пото му', 'пра вая',
+            'пра вую', 'пре пятствовать', 'превраще ния',
+            'при держиваться', 'приветству ют', 'про цедуре',
+            'про центов', 'про явлением', 'проведе ния',
+            'работа ют', 'раздели ли', 'рас слабление',
+            'расслабля ет', 'сде лать', 'скован ности',
+            'сле дующий', 'слы шали', 'сможе те',
+            'со гнув', 'составля ет', 'состо яние',
+            'спи не', 'спо собны', 'становить ся',
+            'сти муляции', 'су ществует', 'сущест вует',
+            'те ло', 'тем ноты', 'то го',
+            'умст венной', 'упраж нение', 'упражне нии',
+            'ус мотрение', 'факто ром', 'целеустремленнос тью',
+            'чашеч кой', 'чрезмер но', 'энтузиаз мом',
+            'это го', 'эф фективно'
         ]);
         const joinWrappedLines = lines => {
             let text = '';
@@ -921,6 +963,19 @@ class YogaApp {
                 heading = matchingHeadings[0];
             }
 
+            if (anchor) {
+                const entry = paragraphEntries[anchor.entryIndex];
+                const remainder = entry.text.slice(anchor.end);
+                const match = remainder.match(/[.!?](?:[»”"'\)\]]*)?(?=\s|$)/);
+                const lineEnd = entry.text.indexOf('\n', anchor.end);
+                let offset = match && match.index !== undefined
+                    ? anchor.end + match.index + match[0].length
+                    : lineEnd >= 0 ? lineEnd : entry.text.length;
+                if (offset <= anchor.end) offset = entry.text.length;
+                addImageEvent(anchor.entryIndex, offset, pos);
+                return;
+            }
+
             if (heading) {
                 const captionStage = caption.match(/стадия\s*(\d+)/i);
                 const captionHasStage = Boolean(captionStage);
@@ -951,19 +1006,6 @@ class YogaApp {
                     const lastIndex = paragraphEntries.length - 1;
                     addImageEvent(lastIndex, paragraphEntries[lastIndex]?.text.length || 0, pos);
                 }
-                return;
-            }
-
-            if (anchor) {
-                const entry = paragraphEntries[anchor.entryIndex];
-                const remainder = entry.text.slice(anchor.end);
-                const sentenceEnd = remainder.search(/[.!?](?:[»”\"')\]]*)?(?=\s|$)/);
-                const lineEnd = entry.text.indexOf('\n', anchor.end);
-                let offset = sentenceEnd >= 0
-                    ? anchor.end + sentenceEnd + 1
-                    : lineEnd >= 0 ? lineEnd : entry.text.length;
-                if (offset <= anchor.end) offset = entry.text.length;
-                addImageEvent(anchor.entryIndex, offset, pos);
                 return;
             }
 
@@ -1016,6 +1058,11 @@ class YogaApp {
     generateImageHtmlFromPos(pos) {
         const filename = pos.image_filename;
         const caption = pos.caption || '';
+        // In the original PDF there are no separate captions under illustrations.
+        // pos.caption is preserved as internal metadata for matching algorithms and
+        // accessibility (alt attribute), while the visible caption block is only
+        // displayed if an authentic caption is literally present in the source.
+        const visibleCaption = pos.original_caption || '';
         return `
             <div class="topic-image-container">
                 <img src="assets/images/${filename}"
@@ -1023,7 +1070,7 @@ class YogaApp {
                      class="topic-image"
                      loading="lazy"
                      onerror="this.style.display='none'">
-                ${caption ? `<div class="image-caption">${caption}</div>` : ''}
+                ${visibleCaption ? `<div class="image-caption">${visibleCaption}</div>` : ''}
             </div>`;
     }
 
