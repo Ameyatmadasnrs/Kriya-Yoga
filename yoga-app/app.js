@@ -649,7 +649,12 @@ class YogaApp {
             'сосредото чиваться', 'пере живать', 'фено мены',
             'взаи модействии', 'устанавли вается', 'что бы',
             'испыты вали', 'подав ляйте', 'психоло гически',
-            'соответ ствует', 'обеспе чивает', 'потра тили'
+            'соответ ствует', 'обеспе чивает', 'потра тили',
+            'пред ставление', 'со ответствующий', 'од ной',
+            'тка ней', 'силь ную', 'необходи мость',
+            'слаби тельных', 'реко мендовал', 'происхо дит',
+            'сред ства', 'оказыва ется', 'по вышают',
+            'бо лезни', 'настоя щими'
         ]);
         const joinWrappedLines = lines => {
             let text = '';
@@ -735,27 +740,61 @@ class YogaApp {
             let segmentText = parts[i];
             if (!segmentText?.trim()) continue;
 
+            const pageNumber = i > 0 ? Number(parts[i - 1]) : null;
+            const topFootnotes = [];
+
             // Source-page headers are repeated scan furniture, not part of
             // the lesson. Remove only metadata-backed or repeated headings at
             // the beginning of a page segment; leave book JSON untouched.
             if (i > 0) {
                 const lines = segmentText.split('\n');
                 let atPageTop = true;
-                segmentText = lines.filter(line => {
-                    const value = line.trim();
-                    if (!value) return !atPageTop;
+                const filteredLines = [];
+                for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                    const value = lines[lineIndex].trim();
+                    if (!value) {
+                        if (!atPageTop) filteredLines.push(lines[lineIndex]);
+                        continue;
+                    }
                     if (atPageTop && (isPageRunningHeader(value)
                         || headingKey(value) === headingKey('Йога и крийя. Вводный курс'))) {
-                        atPageTop = false;
-                        return false;
+                        continue;
                     }
                     atPageTop = false;
-                    return true;
-                }).join('\n');
+                    filteredLines.push(lines[lineIndex]);
+                }
+
+                // Footnotes printed in the footer of the source page often end up
+                // at the very top of the OCR segment following the page marker,
+                // cutting across body sentences and word-wraps. Extract them so
+                // the body continues cleanly, and place them as dedicated footnotes.
+                while (filteredLines.length > 0) {
+                    const firstLine = filteredLines[0].trim();
+                    if (!firstLine.startsWith('*')) break;
+                    let endIdx = 0;
+                    while (endIdx < filteredLines.length) {
+                        const val = filteredLines[endIdx].trim();
+                        if (!val) break;
+                        if (/\((?:ред|ред\.)\)\.?$/.test(val) || val.endsWith('в результате')) {
+                            endIdx++;
+                            break;
+                        }
+                        endIdx++;
+                    }
+                    const fnText = filteredLines.slice(0, endIdx).join('\n').trim();
+                    topFootnotes.push(fnText);
+                    filteredLines.splice(0, endIdx);
+                    while (filteredLines.length > 0 && !filteredLines[0].trim()) {
+                        filteredLines.shift();
+                    }
+                }
+                segmentText = filteredLines.join('\n');
             }
+
             pageSegments.push({
-                page: i > 0 ? Number(parts[i - 1]) : null,
-                text: segmentText
+                page: pageNumber,
+                text: segmentText,
+                footnotes: topFootnotes
             });
         }
 
@@ -808,7 +847,7 @@ class YogaApp {
         // Keep page numbers while cleaning the text so repeated or short anchors
         // can be resolved near the page where the source places the illustration.
         const paragraphEntries = [];
-        pageSegments.forEach(({ page, text }, segmentIndex) => {
+        pageSegments.forEach(({ page, text, footnotes }, segmentIndex) => {
             text.split(/\n\n+/).forEach(paragraph => {
                 let displayParagraph = paragraph.trim();
                 if (!displayParagraph) return;
@@ -855,6 +894,16 @@ class YogaApp {
                     pageSpans: [{ start: 0, end: displayParagraph.length, page }]
                 });
             });
+
+            if (footnotes && footnotes.length) {
+                footnotes.forEach(fn => {
+                    paragraphEntries.push({
+                        page, text: fn, segmentIndex,
+                        isFootnote: true,
+                        pageSpans: [{ start: 0, end: fn.length, page }]
+                    });
+                });
+            }
         });
 
         // Join a confirmed word wrap or clear sentence continuation across pages.
@@ -1099,9 +1148,16 @@ class YogaApp {
                 cursor = Math.max(cursor, offset);
             }
             if (events.length) {
-                if (cursor < entry.text.length) htmlResult += renderParagraph(entry.text.slice(cursor));
+                if (cursor < entry.text.length) {
+                    const chunk = entry.text.slice(cursor);
+                    htmlResult += entry.isFootnote
+                        ? `<div class="topic-footnote">${renderParagraph(chunk)}</div>`
+                        : renderParagraph(chunk);
+                }
             } else {
-                htmlResult += renderParagraph(entry.text);
+                htmlResult += entry.isFootnote
+                    ? `<div class="topic-footnote">${renderParagraph(entry.text)}</div>`
+                    : renderParagraph(entry.text);
             }
         });
 
