@@ -1,8 +1,43 @@
 // Yoga Application - Main JavaScript (Enhanced Premium Version)
+// Multi-Course Configuration (Volume I & Volume II)
+const COURSES = {
+    course1: {
+        id: 'course1',
+        vol: 1,
+        title: 'Вводный курс (Том I)',
+        shortTitle: 'Том I',
+        subtitle: 'Вводный курс',
+        fullTitle: 'Древние тантрические техники йоги и крийи. Том I. Вводный курс',
+        dataFile: 'data/book.json',
+        positionsFile: 'data/image-positions.json',
+        practicePlansFile: 'data/practice-plans.json',
+        imageFolder: 'assets/images/',
+        lessonsRange: 'Уроки 1–12'
+    },
+    course2: {
+        id: 'course2',
+        vol: 2,
+        title: 'Продвинутый курс (Том II)',
+        shortTitle: 'Том II',
+        subtitle: 'Продвинутый курс',
+        fullTitle: 'Древние тантрические техники йоги и крийи. Том II. Продвинутый курс',
+        dataFile: 'data/book2.json',
+        positionsFile: 'data/image-positions2.json',
+        practicePlansFile: null,
+        imageFolder: 'assets/images2/',
+        lessonsRange: 'Уроки 13–24'
+    }
+};
+
 class YogaApp {
     constructor() {
+        this.currentCourse = localStorage.getItem('yogaApp_course') || 'course1';
+        if (!COURSES[this.currentCourse]) this.currentCourse = 'course1';
+        this.coursesData = { course1: null, course2: null };
+        this.coursesImagePositions = { course1: [], course2: [] };
         this.data = null;
         this.imagePositions = [];
+        this.practicePlans = null;
         this.currentLesson = null;
         this.currentTopic = null;
         this.bookmarks = [];
@@ -24,7 +59,7 @@ class YogaApp {
 
     async init() {
         try {
-            await this.loadData();
+            await this.loadCourseData(this.currentCourse);
         } catch (error) {
             console.error('Error loading application data:', error);
             document.getElementById('contentArea').innerHTML = `
@@ -38,11 +73,14 @@ class YogaApp {
         this.setupEventListeners();
         this.loadUserData();
         this.checkDailyStreak();
+        this.updateCourseUI();
         this.renderLessonsList();
         this.showWelcomePage();
+        setTimeout(() => this.prefetchOtherCourseData(), 300);
     }
 
-    async loadData() {
+    async loadCourseData(courseId) {
+        const courseConfig = COURSES[courseId] || COURSES.course1;
         const getJson = async (url, required = true) => {
             const response = await fetch(url);
             if (!response.ok) {
@@ -52,26 +90,90 @@ class YogaApp {
             return response.json();
         };
 
-        [this.data, this.imagePositions, this.practicePlans] = await Promise.all([
-            getJson('data/book.json'),
-            getJson('data/image-positions.json'),
-            getJson('data/practice-plans.json', false)
-        ]);
+        if (!this.coursesData[courseId]) {
+            const promises = [
+                getJson(courseConfig.dataFile),
+                getJson(courseConfig.positionsFile)
+            ];
+            if (courseConfig.practicePlansFile) {
+                promises.push(getJson(courseConfig.practicePlansFile, false));
+            } else {
+                promises.push(Promise.resolve(null));
+            }
 
-        if (!this.data || !this.data.lessons) {
-            throw new Error('Файл data/book.json не содержит структуру уроков.');
+            const [bookData, positionsData, practicePlans] = await Promise.all(promises);
+
+            if (!bookData || !bookData.lessons) {
+                throw new Error(`Файл ${courseConfig.dataFile} не содержит структуру уроков.`);
+            }
+
+            this.coursesData[courseId] = bookData;
+            this.coursesImagePositions[courseId] = positionsData || [];
+            if (practicePlans) this.practicePlans = practicePlans;
         }
-        document.getElementById('appTitle').textContent = this.data.title.split('.')[0];
+
+        this.data = this.coursesData[courseId];
+        this.imagePositions = this.coursesImagePositions[courseId];
+        this.currentCourse = courseId;
+        localStorage.setItem('yogaApp_course', courseId);
+
+        const appTitleEl = document.getElementById('appTitle');
+        if (appTitleEl) {
+            appTitleEl.textContent = `Крийя Йога · ${courseConfig.shortTitle}`;
+            appTitleEl.title = courseConfig.fullTitle;
+        }
+    }
+
+    async prefetchOtherCourseData() {
+        const otherId = this.currentCourse === 'course1' ? 'course2' : 'course1';
+        if (!this.coursesData[otherId]) {
+            try {
+                const courseConfig = COURSES[otherId];
+                const [bookData, positionsData] = await Promise.all([
+                    fetch(courseConfig.dataFile).then(r => r.json()),
+                    fetch(courseConfig.positionsFile).then(r => r.json())
+                ]);
+                this.coursesData[otherId] = bookData;
+                this.coursesImagePositions[otherId] = positionsData || [];
+            } catch (err) {
+                console.warn('Could not prefetch other course:', err);
+            }
+        }
+    }
+
+    async switchCourse(courseId, targetLesson = null, targetTopic = null) {
+        if (!COURSES[courseId]) return;
+        await this.loadCourseData(courseId);
+        this.updateCourseUI();
+        this.renderLessonsList();
+
+        if (targetLesson && targetTopic) {
+            this.loadTopic(String(targetLesson), String(targetTopic));
+        } else {
+            this.showWelcomePage();
+        }
+    }
+
+    updateCourseUI() {
+        document.querySelectorAll('.course-tab').forEach(tab => {
+            const isSelected = tab.dataset.course === this.currentCourse;
+            tab.classList.toggle('active', isSelected);
+            tab.setAttribute('aria-selected', String(isSelected));
+        });
+        const appTitleEl = document.getElementById('appTitle');
+        if (appTitleEl && COURSES[this.currentCourse]) {
+            appTitleEl.textContent = `Крийя Йога · ${COURSES[this.currentCourse].shortTitle}`;
+        }
     }
 
     checkDailyStreak() {
         const today = new Date().toDateString();
         const lastVisit = localStorage.getItem('yogaApp_lastVisit');
-        
+
         if (lastVisit) {
             const lastDate = new Date(lastVisit);
             const diffDays = Math.floor((new Date() - lastDate) / (1000 * 60 * 60 * 24));
-            
+
             if (diffDays === 1) {
                 this.dailyStreak = parseInt(localStorage.getItem('yogaApp_streak') || '0') + 1;
             } else if (diffDays > 1) {
@@ -82,10 +184,10 @@ class YogaApp {
         } else {
             this.dailyStreak = 1;
         }
-        
+
         localStorage.setItem('yogaApp_lastVisit', new Date().toISOString());
         localStorage.setItem('yogaApp_streak', this.dailyStreak.toString());
-        
+
         // Check achievements
         this.checkAchievements();
     }
@@ -104,9 +206,9 @@ class YogaApp {
                 return Object.keys(this.readProgress).length >= totalTopics;
             } }
         ];
-        
+
         const savedAchievements = JSON.parse(localStorage.getItem('yogaApp_achievements') || '[]');
-        
+
         for (const achievement of achievementChecks) {
             if (!savedAchievements.includes(achievement.id) && achievement.check()) {
                 savedAchievements.push(achievement.id);
@@ -114,36 +216,46 @@ class YogaApp {
                 this.showToast(`🏆 Достижение: ${achievement.name}!`);
             }
         }
-        
+
         this.achievements = savedAchievements;
         localStorage.setItem('yogaApp_achievements', JSON.stringify(this.achievements));
     }
 
     setupEventListeners() {
         // Theme toggle
+        document.querySelectorAll('.course-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const courseId = tab.dataset.course;
+                if (courseId && courseId !== this.currentCourse) {
+                    this.switchCourse(courseId);
+                }
+            });
+        });
+
+        // Theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
 
         // Menu toggle
         document.getElementById('menuToggle').addEventListener('click', () => this.toggleSidebar());
         document.getElementById('sidebarOverlay').addEventListener('click', () => this.closeSidebar());
-        
+
         // Header buttons
         document.getElementById('searchBtn').addEventListener('click', () => this.openModal('searchModal'));
         document.getElementById('bookmarksBtn').addEventListener('click', () => this.showBookmarks());
         document.getElementById('favoritesBtn').addEventListener('click', () => this.showFavorites());
         document.getElementById('progressBtn').addEventListener('click', () => this.showProgress());
-        
+
         // Modal close buttons
         document.getElementById('closeSearch').addEventListener('click', () => this.closeModal('searchModal'));
         document.getElementById('closeBookmarks').addEventListener('click', () => this.closeModal('bookmarksModal'));
         document.getElementById('closeFavorites').addEventListener('click', () => this.closeModal('favoritesModal'));
         document.getElementById('closeProgress').addEventListener('click', () => this.closeModal('progressModal'));
         document.getElementById('closeNotes').addEventListener('click', () => this.closeModal('notesModal'));
-        
+
         // Search functionality
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', (e) => this.performSearch(e.target.value));
-        
+
         // Close modals on outside click
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', (e) => {
@@ -206,7 +318,7 @@ class YogaApp {
     toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const mainContent = document.getElementById('mainContent');
-        
+
         if (window.innerWidth <= 768) {
             const open = !sidebar.classList.contains('show');
             sidebar.classList.toggle('show', open);
@@ -260,11 +372,11 @@ class YogaApp {
             const isExpanded = this.expandedLessons.has(lessonNum);
             lessonEl.className = `lesson-item ${isExpanded ? 'expanded' : 'collapsed'} ${this.currentLesson === lessonNum ? 'active' : ''}`;
             lessonEl.dataset.lesson = lessonNum;
-            
+
             // Sort topics numerically
             const sortedTopics = Object.entries(lesson.topics)
                 .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
-            
+
             lessonEl.innerHTML = `
                 <button type="button" class="lesson-title" aria-expanded="${isExpanded}" aria-controls="topics-${lessonNum}">Урок ${lessonNum}</button>
                 <ul class="topic-list" id="topics-${lessonNum}">
@@ -279,9 +391,9 @@ class YogaApp {
                     `).join('')}
                 </ul>
             `;
-            
+
             // Toggle expansion on title click
-            lessonEl.querySelector('.lesson-title').addEventListener('click', (e) => {
+            lessonEl.querySelector('.lesson-title')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const currentlyExpanded = this.expandedLessons.has(lessonNum);
                 if (currentlyExpanded) {
@@ -319,7 +431,7 @@ class YogaApp {
     loadTopic(lessonNum, topicNum) {
         this.currentLesson = lessonNum;
         this.currentTopic = topicNum;
-        
+
         const lesson = this.data.lessons[lessonNum];
         if (!lesson || !lesson.topics[topicNum]) {
             console.error('Topic not found:', lessonNum, topicNum);
@@ -335,9 +447,13 @@ class YogaApp {
         this.updateReadingProgress(lessonNum, topicNum);
     }
 
-    renderTopic(lessonNum, topicNum, topic) {
+    renderTopic(lessonNum, topicNum, topic = null) {
+        topic = topic || this.data.lessons[lessonNum]?.topics[topicNum];
+        if (!topic) return;
+        this.currentLesson = String(lessonNum);
+        this.currentTopic = String(topicNum);
         const contentArea = document.getElementById('contentArea');
-        
+
         // Check if this is a practice program topic
         let formattedContent = '';
         const isPracticePlan = topic.name.toLowerCase().includes('программа ежедневных занятий');
@@ -349,9 +465,9 @@ class YogaApp {
             formattedContent = this.formatContent(topic.text, topic.start_page);
         }
 
-        const isBookmarked = this.bookmarks.some(b => b.lesson === lessonNum && b.topic === topicNum);
-        const isFavorite = this.favorites.some(f => f.lesson === lessonNum && f.topic === topicNum);
-        
+        const isBookmarked = this.bookmarks.some(b => (b.course || 'course1') === this.currentCourse && String(b.lesson) === String(lessonNum) && String(b.topic) === String(topicNum));
+        const isFavorite = this.favorites.some(f => (f.course || 'course1') === this.currentCourse && String(f.lesson) === String(lessonNum) && String(f.topic) === String(topicNum));
+
         contentArea.innerHTML = `
             <div class="page-header topic-page-header">
                 <div class="lesson-kicker">Урок ${lessonNum}</div>
@@ -360,13 +476,13 @@ class YogaApp {
                     <div class="subtitle">Тема ${topicNum}</div>
                 </div>
             </div>
-            
+
             <div class="page-content">
                 ${formattedContent}
             </div>
-            
+
             <div class="page-number">Тема ${topicNum} из ${Object.keys(this.data.lessons[lessonNum].topics).length}</div>
-            
+
             <div class="content-actions">
                 <button class="action-btn ${isBookmarked ? 'active' : ''}" onclick="app.toggleBookmark('${lessonNum}', '${topicNum}')">
                     ${isBookmarked ? '⭐ Закладка' : '🔖 Добавить закладку'}
@@ -375,7 +491,7 @@ class YogaApp {
                     ${isFavorite ? '❤️ В избранном' : '🤍 В избранное'}
                 </button>
             </div>
-            
+
             <div class="content-nav">
                 <button class="nav-btn" id="prevBtn">← Назад</button>
                 <button class="nav-btn" id="nextBtn">Вперед →</button>
@@ -398,34 +514,38 @@ class YogaApp {
         });
     }
 
-    navigateTopic(direction) {
+    async navigateTopic(direction) {
         const lessonNum = this.currentLesson;
         const topicNum = parseInt(this.currentTopic);
         const lesson = this.data.lessons[lessonNum];
+        if (!lesson) return;
         const topicKeys = Object.keys(lesson.topics).map(Number).sort((a, b) => a - b);
         const currentIndex = topicKeys.indexOf(topicNum);
         const newIndex = currentIndex + direction;
-        
+
         if (newIndex >= 0 && newIndex < topicKeys.length) {
-            // Stay in same lesson
             this.loadTopic(lessonNum, topicKeys[newIndex].toString());
         } else if (direction < 0 && currentIndex === 0) {
-            // Go to previous lesson's last topic
-            const prevLessonNum = parseInt(lessonNum) - 1;
-            if (prevLessonNum >= 1) {
-                const prevLesson = this.data.lessons[prevLessonNum.toString()];
-                if (prevLesson) {
-                    const lastTopic = Math.max(...Object.keys(prevLesson.topics).map(Number));
-                    this.loadTopic(prevLessonNum.toString(), lastTopic.toString());
-                }
+            const lessonKeys = Object.keys(this.data.lessons).map(Number).sort((a, b) => a - b);
+            const currentLessonIdx = lessonKeys.indexOf(parseInt(lessonNum));
+            if (currentLessonIdx > 0) {
+                const prevLessonNum = lessonKeys[currentLessonIdx - 1].toString();
+                const prevLesson = this.data.lessons[prevLessonNum];
+                const lastTopic = Math.max(...Object.keys(prevLesson.topics).map(Number));
+                this.loadTopic(prevLessonNum, lastTopic.toString());
+            } else if (this.currentCourse === 'course2') {
+                await this.switchCourse('course1', '12', '6');
             }
         } else if (direction > 0 && currentIndex === topicKeys.length - 1) {
-            // Go to next lesson's first topic
-            const nextLessonNum = parseInt(lessonNum) + 1;
-            const nextLesson = this.data.lessons[nextLessonNum.toString()];
-            if (nextLesson) {
+            const lessonKeys = Object.keys(this.data.lessons).map(Number).sort((a, b) => a - b);
+            const currentLessonIdx = lessonKeys.indexOf(parseInt(lessonNum));
+            if (currentLessonIdx < lessonKeys.length - 1) {
+                const nextLessonNum = lessonKeys[currentLessonIdx + 1].toString();
+                const nextLesson = this.data.lessons[nextLessonNum];
                 const firstTopic = Math.min(...Object.keys(nextLesson.topics).map(Number));
-                this.loadTopic(nextLessonNum.toString(), firstTopic.toString());
+                this.loadTopic(nextLessonNum, firstTopic.toString());
+            } else if (this.currentCourse === 'course1') {
+                await this.switchCourse('course2', '13', '1');
             }
         }
     }
@@ -661,13 +781,16 @@ class YogaApp {
             lines.flatMap(line => String(line).split('\n')).forEach(line => {
                 let next = line.trim();
                 if (!next) return;
-                const left = text.match(/([А-Яа-яЁё]+)$/);
+                const left = text.match(/([А-Яа-яЁё]+)[-–—]?$/);
                 const right = next.match(/^([А-Яа-яЁё]+)(?=[^А-Яа-яЁё]|$)/);
                 const splitKey = left && right
                     ? `${left[1].toLocaleLowerCase('ru')} ${right[1].toLocaleLowerCase('ru')}`
                     : '';
                 if (splitKey && knownLineWrapSplits.has(splitKey)) {
-                    text = text.slice(0, -left[1].length) + left[1] + right[1];
+                    text = text.slice(0, -left[1].length).replace(/[-–—]$/, '') + left[1] + right[1];
+                    next = next.slice(right[1].length).trimStart();
+                } else if (/[-–—]$/.test(text) && right) {
+                    text = text.replace(/[-–—]$/, '') + right[1];
                     next = next.slice(right[1].length).trimStart();
                 }
                 if (next) text += `${text && !/^[,.;:!?)]/.test(next) ? ' ' : ''}${next}`;
@@ -757,7 +880,7 @@ class YogaApp {
                         continue;
                     }
                     if (atPageTop && (isPageRunningHeader(value)
-                        || headingKey(value) === headingKey('Йога и крийя. Вводный курс'))) {
+                        || headingKey(value) === headingKey('Йога и крийя. Вводный курс') || headingKey(value) === headingKey('Йога и крийя. Продвинутый курс'))) {
                         continue;
                     }
                     atPageTop = false;
@@ -812,13 +935,14 @@ class YogaApp {
 
             const leftLine = previousLines[previousLineIndex].trimEnd();
             const rightLine = currentLines[currentLineIndex].trimStart();
-            const leftMatch = leftLine.match(/([А-Яа-яЁё]+)$/);
+            const leftMatch = leftLine.match(/([А-Яа-яЁё]+)[-–—]?$/);
             const rightMatch = rightLine.match(/^([А-Яа-яЁё]+)(?=[^А-Яа-яЁё]|$)/);
             const splitKey = leftMatch && rightMatch
                 ? `${leftMatch[1].toLocaleLowerCase('ru')} ${rightMatch[1].toLocaleLowerCase('ru')}`
                 : '';
+            const isHyphenPageWrap = /[-–—]$/.test(leftLine) && /^[а-яё]/.test(rightLine);
             const isKnownWordWrap = Boolean(splitKey
-                && (knownLineWrapSplits.has(splitKey) || knownPageWrapSplits.has(splitKey)));
+                && (knownLineWrapSplits.has(splitKey) || knownPageWrapSplits.has(splitKey))) || isHyphenPageWrap;
             const startsAsBodyContinuation = /^[а-яё]/.test(rightLine)
                 && !/[.!?…:][»”"')\]]?$/.test(leftLine)
                 && !isSectionHeading(rightLine)
@@ -830,9 +954,10 @@ class YogaApp {
             if (!isKnownWordWrap && !startsAsBodyContinuation) continue;
 
             if (isKnownWordWrap && leftMatch && rightMatch) {
+                const cleanLeft = leftMatch[1].replace(/-$/, '');
                 previousLines[previousLineIndex] = previousLines[previousLineIndex].replace(
-                    /([А-Яа-яЁё]+)$/,
-                    (_, fragment) => `${fragment}${rightMatch[1]}`
+                    /([А-Яа-яЁё]+)-?$/,
+                    () => `${cleanLeft}${rightMatch[1]}`
                 );
                 currentLines[currentLineIndex] = currentLines[currentLineIndex].replace(
                     /^\s*[А-Яа-яЁё]+/,
@@ -1170,14 +1295,11 @@ class YogaApp {
     generateImageHtmlFromPos(pos) {
         const filename = pos.image_filename;
         const caption = pos.caption || '';
-        // In the original PDF there are no separate captions under illustrations.
-        // pos.caption is preserved as internal metadata for matching algorithms and
-        // accessibility (alt attribute), while the visible caption block is only
-        // displayed if an authentic caption is literally present in the source.
         const visibleCaption = pos.original_caption || '';
+        const folder = COURSES[this.currentCourse]?.imageFolder || 'assets/images/';
         return `
             <div class="topic-image-container">
-                <img src="assets/images/${filename}"
+                <img src="${folder}${filename}"
                      alt="${caption}"
                      class="topic-image"
                      loading="lazy"
@@ -1203,75 +1325,99 @@ class YogaApp {
     }
 
     toggleBookmark(lessonNum, topicNum) {
-        const existingIndex = this.bookmarks.findIndex(b => 
-            b.lesson === lessonNum && b.topic === topicNum
+        const courseId = this.currentCourse;
+        const existingIndex = this.bookmarks.findIndex(b =>
+            (b.course || 'course1') === courseId &&
+            String(b.lesson) === String(lessonNum) &&
+            String(b.topic) === String(topicNum)
         );
-        
+        const lesson = this.data.lessons[lessonNum];
+        const topic = lesson?.topics[topicNum];
+
         if (existingIndex >= 0) {
             this.bookmarks.splice(existingIndex, 1);
             this.showToast('Закладка удалена');
         } else {
-            const lesson = this.data.lessons[lessonNum];
-            const topic = lesson.topics[topicNum];
             this.bookmarks.push({
+                course: courseId,
                 lesson: lessonNum,
                 topic: topicNum,
-                name: topic.name,
+                name: topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`,
                 added: Date.now()
             });
             this.showToast('Закладка добавлена');
         }
-        
+
         this.saveUserData();
         this.renderTopic(lessonNum, topicNum, topic);
     }
 
     toggleFavorite(lessonNum, topicNum) {
-        const existingIndex = this.favorites.findIndex(f => f.lesson === lessonNum && f.topic === topicNum);
-        
+        const courseId = this.currentCourse;
+        const existingIndex = this.favorites.findIndex(f =>
+            (f.course || 'course1') === courseId &&
+            String(f.lesson) === String(lessonNum) &&
+            String(f.topic) === String(topicNum)
+        );
+        const lesson = this.data.lessons[lessonNum];
+        const topic = lesson?.topics[topicNum];
+
         if (existingIndex >= 0) {
             this.favorites.splice(existingIndex, 1);
             this.showToast('Удалено из избранного');
         } else {
-            const lesson = this.data.lessons[lessonNum];
-            const topic = lesson.topics[topicNum];
             this.favorites.push({
+                course: courseId,
                 lesson: lessonNum,
                 topic: topicNum,
-                name: topic.name,
+                name: topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`,
                 added: Date.now()
             });
             this.showToast('Добавлено в избранное');
         }
-        
+
         this.saveUserData();
         this.renderTopic(lessonNum, topicNum, topic);
     }
 
     showBookmarks() {
         const container = document.getElementById('bookmarksList');
-        
+
         if (this.bookmarks.length === 0) {
-            container.innerHTML = '<p style="padding: 1rem; color: #666;">Закладок пока нет</p>';
-        } else {
-            container.innerHTML = this.bookmarks.map((bookmark, index) => `
-                <div class="list-item">
-                    <button type="button" class="list-item-info" onclick="app.loadBookmark(${index})">
-                        <div class="list-item-title">Урок ${bookmark.lesson}, Тема ${bookmark.topic}</div>
-                        <div class="list-item-subtitle">${bookmark.name}</div>
-                    </button>
-                    <button type="button" class="remove-btn" onclick="app.removeBookmark(${index})">Удалить</button>
-                </div>
-            `).join('');
+            container.innerHTML = '<div class="empty-list">Нет закладок</div>';
+            this.openModal('bookmarksModal');
+            return;
         }
-        
+
+        container.innerHTML = this.bookmarks.map((b, index) => {
+            const cId = b.course || 'course1';
+            const badgeClass = cId === 'course2' ? 'badge-vol2' : 'badge-vol1';
+            const badgeText = cId === 'course2' ? 'Том II' : 'Том I';
+            return `
+                <div class="list-item">
+                    <div class="list-item-content" onclick="app.loadBookmark(${index})">
+                        <div class="list-item-title"><span class="course-badge ${badgeClass}">${badgeText}</span>${b.name}</div>
+                        <div class="list-item-subtitle">Урок ${b.lesson}, Тема ${b.topic}</div>
+                    </div>
+                    <button class="list-item-remove" onclick="app.removeBookmark(${index})" title="Удалить закладку">×</button>
+                </div>
+            `;
+        }).join('');
+
         this.openModal('bookmarksModal');
     }
 
-    loadBookmark(index) {
+    async loadBookmark(index) {
         const bookmark = this.bookmarks[index];
-        this.loadTopic(bookmark.lesson, bookmark.topic);
-        this.closeModal('bookmarksModal');
+        if (bookmark) {
+            const cId = bookmark.course || 'course1';
+            if (cId !== this.currentCourse) {
+                await this.switchCourse(cId, bookmark.lesson, bookmark.topic);
+            } else {
+                this.loadTopic(bookmark.lesson, bookmark.topic);
+            }
+            this.closeModal('bookmarksModal');
+        }
     }
 
     removeBookmark(index) {
@@ -1283,28 +1429,42 @@ class YogaApp {
 
     showFavorites() {
         const container = document.getElementById('favoritesList');
-        
+
         if (this.favorites.length === 0) {
-            container.innerHTML = '<p style="padding: 1rem; color: #666;">Избранного пока нет</p>';
-        } else {
-            container.innerHTML = this.favorites.map((fav, index) => `
-                <div class="list-item">
-                    <button type="button" class="list-item-info" onclick="app.loadFavorite(${index})">
-                        <div class="list-item-title">Урок ${fav.lesson}, Тема ${fav.topic}</div>
-                        <div class="list-item-subtitle">${fav.name}</div>
-                    </button>
-                    <button type="button" class="remove-btn" onclick="app.removeFavorite(${index})">Удалить</button>
-                </div>
-            `).join('');
+            container.innerHTML = '<div class="empty-list">Нет избранных практик</div>';
+            this.openModal('favoritesModal');
+            return;
         }
-        
+
+        container.innerHTML = this.favorites.map((f, index) => {
+            const cId = f.course || 'course1';
+            const badgeClass = cId === 'course2' ? 'badge-vol2' : 'badge-vol1';
+            const badgeText = cId === 'course2' ? 'Том II' : 'Том I';
+            return `
+                <div class="list-item">
+                    <div class="list-item-content" onclick="app.loadFavorite(${index})">
+                        <div class="list-item-title"><span class="course-badge ${badgeClass}">${badgeText}</span>${f.name}</div>
+                        <div class="list-item-subtitle">Урок ${f.lesson}, Тема ${f.topic}</div>
+                    </div>
+                    <button class="list-item-remove" onclick="app.removeFavorite(${index})" title="Удалить из избранного">×</button>
+                </div>
+            `;
+        }).join('');
+
         this.openModal('favoritesModal');
     }
 
-    loadFavorite(index) {
+    async loadFavorite(index) {
         const fav = this.favorites[index];
-        this.loadTopic(fav.lesson, fav.topic);
-        this.closeModal('favoritesModal');
+        if (fav) {
+            const cId = fav.course || 'course1';
+            if (cId !== this.currentCourse) {
+                await this.switchCourse(cId, fav.lesson, fav.topic);
+            } else {
+                this.loadTopic(fav.lesson, fav.topic);
+            }
+            this.closeModal('favoritesModal');
+        }
     }
 
     removeFavorite(index) {
@@ -1322,7 +1482,7 @@ class YogaApp {
         }
         const topicsRead = Object.keys(this.readProgress).length;
         const percentage = Math.round((topicsRead / totalTopics) * 100);
-        
+
         const container = document.getElementById('progressContent');
         container.innerHTML = `
             <div class="progress-overview">
@@ -1332,16 +1492,16 @@ class YogaApp {
                     ${topicsRead} из ${totalTopics} тем
                 </div>
             </div>
-            
+
             <div class="progress-details">
                 <h3 style="margin-bottom: 1rem;">Прогресс по урокам</h3>
                 ${Object.entries(this.data.lessons).map(([lessonNum, lesson]) => {
                     const topicKeys = Object.keys(lesson.topics);
-                    const completedTopics = topicKeys.filter(t => 
+                    const completedTopics = topicKeys.filter(t =>
                         this.readProgress[`${lessonNum}-${t}`]
                     ).length;
                     const lessonPercentage = Math.round((completedTopics / topicKeys.length) * 100);
-                    
+
                     return `
                         <div class="lesson-progress">
                             <div class="lesson-progress-name">Урок ${lessonNum}</div>
@@ -1354,161 +1514,178 @@ class YogaApp {
                 }).join('')}
             </div>
         `;
-        
+
         this.openModal('progressModal');
     }
 
-    performSearch(query) {
+    async performSearch(query) {
         const resultsContainer = document.getElementById('searchResults');
-        
+
         if (!query || query.length < 2) {
             resultsContainer.innerHTML = '';
             return;
         }
-        
+
+        // Ensure both courses are loaded for search
+        if (!this.coursesData.course1 || !this.coursesData.course2) {
+            await this.prefetchOtherCourseData();
+        }
+
         const results = [];
         const lowerQuery = query.toLowerCase();
-        
-        // Search through all topics in lessons, sorted
-        const sortedLessons = Object.entries(this.data.lessons)
-            .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
 
-        for (const [lessonNum, lesson] of sortedLessons) {
-            const sortedTopics = Object.entries(lesson.topics)
+        for (const [cKey, cCfg] of Object.entries(COURSES)) {
+            const cData = this.coursesData[cKey];
+            if (!cData || !cData.lessons) continue;
+
+            const sortedLessons = Object.entries(cData.lessons)
                 .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
 
-            for (const [topicNum, topic] of sortedTopics) {
-                const text = topic.text.toLowerCase();
-                const name = topic.name.toLowerCase();
+            for (const [lessonNum, lesson] of sortedLessons) {
+                const sortedTopics = Object.entries(lesson.topics)
+                    .sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
 
-                if (text.includes(lowerQuery) || name.includes(lowerQuery)) {
-                    // Find context around the match in text
-                    const index = text.indexOf(lowerQuery);
-                    let snippet = '';
-                    if (index !== -1) {
-                        const start = Math.max(0, index - 50);
-                        const end = Math.min(topic.text.length, index + query.length + 50);
-                        snippet = topic.text.substring(start, end).replace(/\n/g, ' ');
-                    } else {
-                        snippet = topic.text.substring(0, 100).replace(/\n/g, ' ');
+                for (const [topicNum, topic] of sortedTopics) {
+                    const text = topic.text.toLowerCase();
+                    const name = topic.name.toLowerCase();
+
+                    if (text.includes(lowerQuery) || name.includes(lowerQuery)) {
+                        const index = text.indexOf(lowerQuery);
+                        let snippet = '';
+                        if (index !== -1) {
+                            const start = Math.max(0, index - 50);
+                            const end = Math.min(topic.text.length, index + query.length + 50);
+                            snippet = topic.text.substring(start, end).replace(/\n/g, ' ');
+                        } else {
+                            snippet = topic.text.substring(0, 100).replace(/\n/g, ' ');
+                        }
+
+                        results.push({
+                            course: cKey,
+                            lesson: lessonNum,
+                            topic: topicNum,
+                            name: topic.name,
+                            snippet: snippet
+                        });
                     }
-                    
-                    results.push({
-                        lesson: lessonNum,
-                        topic: topicNum,
-                        name: topic.name,
-                        snippet: '...' + snippet + '...',
-                        startPage: topic.start_page
-                    });
                 }
             }
         }
-        
+
         if (results.length === 0) {
-            resultsContainer.innerHTML = '<p style="padding: 1rem; color: #666;">Ничего не найдено</p>';
-        } else {
-            resultsContainer.innerHTML = results.slice(0, 50).map(result => `
-                <button type="button" class="list-item" onclick="app.loadSearchResult('${result.lesson}', '${result.topic}')">
-                    <div class="list-item-info">
-                        <div class="list-item-title">Урок ${result.lesson}, Тема ${result.topic}: ${result.name}</div>
-                        <div class="list-item-subtitle" style="font-size: 0.85rem; color: #666;">${result.snippet}</div>
-                    </div>
-                </button>
-            `).join('');
+            resultsContainer.innerHTML = '<div class="no-results">Ничего не найдено</div>';
+            return;
         }
+
+        resultsContainer.innerHTML = results.map(result => {
+            const isVol2 = result.course === 'course2';
+            const badgeClass = isVol2 ? 'badge-vol2' : 'badge-vol1';
+            const badgeText = isVol2 ? 'Том II' : 'Том I';
+            return `
+                <div class="search-result-item" onclick="app.loadSearchResult('${result.course}', '${result.lesson}', '${result.topic}')">
+                    <div class="search-result-title"><span class="course-badge ${badgeClass}">${badgeText}</span>Урок ${result.lesson}, Тема ${result.topic}: ${result.name}</div>
+                    <div class="search-result-snippet">...${result.snippet}...</div>
+                </div>
+            `;
+        }).join('');
     }
 
-    loadSearchResult(lessonNum, topicNum) {
-        this.loadTopic(lessonNum, topicNum);
+    async loadSearchResult(courseId, lessonNum, topicNum) {
+        if (courseId && courseId !== this.currentCourse) {
+            await this.switchCourse(courseId, lessonNum, topicNum);
+        } else {
+            this.loadTopic(lessonNum, topicNum);
+        }
         this.closeModal('searchModal');
     }
 
     renderFrontMatterPage(page) {
         const contentArea = document.getElementById('contentArea');
         const formattedContent = this.formatContent(page.text, page.page);
-        
+
         contentArea.innerHTML = `
             <div class="page-header">
                 <h1>${this.data.title}</h1>
             </div>
-            
+
             <div class="page-content">
                 ${formattedContent}
             </div>
-            
+
             <div class="page-number">Страница ${page.page}</div>
         `;
     }
 
     showWelcomePage() {
         const contentArea = document.getElementById('contentArea');
-        const lessonsCount = Object.keys(this.data.lessons).length;
-        
-        // Count total topics from lessons structure
-        let topicsCount = 0;
-        for (const lesson of Object.values(this.data.lessons)) {
-            topicsCount += Object.keys(lesson.topics).length;
-        }
-        
+        const activeCourse = COURSES[this.currentCourse] || COURSES.course1;
+        const isVol1 = this.currentCourse === 'course1';
+        const coverImg = isVol1 ? 'assets/images/img001.jpg' : 'assets/images2/img_v2_001.png';
+
         contentArea.innerHTML = `
             <div class="page-header">
-                <h1>${this.data.title}</h1>
-                <div class="subtitle">Добро пожаловать в приложение для изучения Крийя Йоги</div>
+                <h1>Древние тантрические техники йоги и крийи</h1>
+                <div class="subtitle">Свами Сатьянанда Сарасвати · Систематический курс в трёх томах</div>
             </div>
-            
+
             <div class="page-content">
                 <div class="welcome-image-container">
-                    <img src="assets/images/img001.jpg" alt="Эмблема на обложке книги" class="welcome-image" onerror="this.style.display='none'">
+                    <img src="${coverImg}" alt="Обложка тома" class="welcome-image" onerror="this.style.display='none'">
                 </div>
-                <p class="welcome-intro">Это приложение содержит полный курс древних тантрических техник йоги и крийи.</p>
-                
-                <h3>О курсе</h3>
-                <p>Курс состоит из <strong>${lessonsCount} уроков</strong>, включающих <strong>${topicsCount} тем</strong> по различным аспектам йогической практики:</p>
-                <ul class="welcome-topic-list">
-                    <li>Крийя йога</li>
-                    <li>Хатха йога (асаны, шаткармы)</li>
-                    <li>Пранаяма (дыхательные техники)</li>
-                    <li>Медитация и осознание</li>
-                    <li>Мудры</li>
-                    <li>Философия йоги</li>
-                </ul>
-                
-                <h3>Как пользоваться приложением</h3>
-                <ul class="welcome-guide-list">
-                    <li>Выбирайте уроки и темы в меню слева</li>
-                    <li>Используйте поиск для быстрого нахождения информации</li>
-                    <li>Добавляйте важные страницы в закладки</li>
-                    <li>Отмечайте избранные темы для быстрого доступа</li>
-                    <li>Отслеживайте свой прогресс обучения</li>
-                </ul>
-                
-                <h3>Функции приложения</h3>
+                <p class="welcome-intro">Полное практическое руководство по древним тантрическим техникам йоги и крийи Бихарской школы йоги. Выберите курс для изучения:</p>
+
+                <div class="welcome-courses-grid">
+                    <div class="course-card ${isVol1 ? 'active-course' : ''}">
+                        <div class="course-card-header">
+                            <span class="course-card-badge badge-vol1">Том I</span>
+                            ${isVol1 ? '<span style="font-size:0.8rem; color:var(--brand); font-weight:600;">Текущий том</span>' : ''}
+                        </div>
+                        <h4>Вводный курс</h4>
+                        <p>12 уроков (84 темы): основы хатха-йоги, шаткармы (джала нети), начальные асаны, пранаяма, осознание и расслабление (йога-нидра).</p>
+                        <button class="course-card-btn" onclick="app.switchCourse('course1', '1', '1')">
+                            ${isVol1 ? 'Читать Том I' : 'Перейти к Тому I'}
+                        </button>
+                    </div>
+
+                    <div class="course-card ${!isVol1 ? 'active-course' : ''}">
+                        <div class="course-card-header">
+                            <span class="course-card-badge badge-vol2">Том II</span>
+                            ${!isVol1 ? '<span style="font-size:0.8rem; color:var(--accent); font-weight:600;">Текущий том</span>' : ''}
+                        </div>
+                        <h4>Продвинутый курс</h4>
+                        <p>12 уроков (74 темы): углубленная карма-йога и бхакти-йога, тантра, чакры (от Муладхары до Аджны), бандхи, мудры и аджапа-джапа.</p>
+                        <button class="course-card-btn" onclick="app.switchCourse('course2', '13', '1')">
+                            ${!isVol1 ? 'Читать Том II' : 'Перейти к Тому II'}
+                        </button>
+                    </div>
+                </div>
+
+                <h3>О текущем томе (${activeCourse.title})</h3>
+                <p>В этом томе представлено <strong>${Object.keys(this.data.lessons).length} уроков</strong> и <strong>${Object.values(this.data.lessons).reduce((tot, l) => tot + Object.keys(l.topics).length, 0)} тем</strong>. Выберите интересующий урок в боковом меню слева или начните с первого урока курса.</p>
+
+                <h3>Возможности приложения</h3>
                 <div class="welcome-feature-grid">
                     <div class="feature-card">
-                        <div class="feature-icon" aria-hidden="true">📚</div>
-                        <strong>Уроки</strong>
-                        <p>${lessonsCount} уроков с темами</p>
+                        <div class="feature-icon">🔖</div>
+                        <div class="feature-title">Закладки</div>
+                        <div class="feature-desc">Сохраняйте важные места в обоих томах</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon" aria-hidden="true">🔖</div>
-                        <strong>Закладки</strong>
-                        <p>${this.bookmarks.length} сохранено</p>
+                        <div class="feature-icon">❤️</div>
+                        <div class="feature-title">Избранное</div>
+                        <div class="feature-desc">Создавайте список любимых практик</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon" aria-hidden="true">❤️</div>
-                        <strong>Избранное</strong>
-                        <p>${this.favorites.length} тем</p>
+                        <div class="feature-icon">🔍</div>
+                        <div class="feature-title">Поиск</div>
+                        <div class="feature-desc">Быстрый сквозной поиск по обоим томам книги</div>
                     </div>
                     <div class="feature-card">
-                        <div class="feature-icon" aria-hidden="true">📊</div>
-                        <strong>Прогресс</strong>
-                        <p>Отслеживание обучения</p>
+                        <div class="feature-icon">📊</div>
+                        <div class="feature-title">Прогресс</div>
+                        <div class="feature-desc">Следите за своими достижениями в обучении</div>
                     </div>
                 </div>
-                
-                <p class="welcome-note">
-                    Начните свое путешествие в мир йоги, выбрав первый урок в меню слева.
-                </p>
             </div>
         `;
     }
@@ -1537,7 +1714,7 @@ class YogaApp {
         const toast = document.getElementById('toast');
         toast.textContent = message;
         toast.classList.add('show');
-        
+
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3000);
@@ -1553,7 +1730,7 @@ class YogaApp {
         const bookmarks = localStorage.getItem('yogaApp_bookmarks');
         const favorites = localStorage.getItem('yogaApp_favorites');
         const progress = localStorage.getItem('yogaApp_progress');
-        
+
         if (bookmarks) this.bookmarks = JSON.parse(bookmarks);
         if (favorites) this.favorites = JSON.parse(favorites);
         if (progress) this.readProgress = JSON.parse(progress);

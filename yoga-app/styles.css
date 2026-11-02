@@ -459,3 +459,165 @@ body.vedic-theme .lesson-item.active { background: rgba(255, 242, 223, .06); }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* ==========================================================================
+   Multi-Course Support: Volume I & Volume II Switcher & Badges
+   ========================================================================== */
+
+.course-switch-container {
+    padding: 12px 14px 6px 14px;
+}
+
+.course-switcher {
+    display: flex;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 4px;
+}
+
+.course-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 6px;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--sidebar-ink);
+    opacity: 0.75;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-family: var(--ui-font);
+}
+
+.course-tab:hover {
+    opacity: 0.95;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.course-tab.active {
+    background: rgba(255, 255, 255, 0.18);
+    opacity: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    font-weight: 600;
+}
+
+.course-tab-vol {
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.course-tab-title {
+    font-size: 0.82rem;
+    line-height: 1.2;
+    margin-top: 2px;
+}
+
+/* Badges for Courses */
+.course-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-right: 6px;
+    vertical-align: middle;
+    letter-spacing: 0.03em;
+}
+
+.badge-vol1 {
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+    border: 1px solid var(--line);
+}
+
+.badge-vol2 {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid rgba(166, 102, 67, 0.25);
+}
+
+/* Welcome Page Course Selection Cards */
+.welcome-courses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin: 24px 0 32px 0;
+}
+
+.course-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--brand);
+}
+
+.course-card.active-course {
+    border-color: var(--brand);
+    border-width: 2px;
+    background: var(--surface-soft);
+}
+
+.course-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.course-card-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+}
+
+.course-card h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.15rem;
+    color: var(--ink);
+}
+
+.course-card p {
+    font-size: 0.92rem;
+    color: var(--ink-muted);
+    margin: 0 0 16px 0;
+    line-height: 1.45;
+}
+
+.course-card-btn {
+    align-self: flex-start;
+    padding: 8px 16px;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.88rem;
+    transition: background 0.15s ease;
+}
+
+.course-card-btn:hover {
+    background: var(--brand-strong);
+}

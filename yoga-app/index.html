@@ -71,6 +71,18 @@
         <!-- Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <nav class="lesson-nav">
+                <div class="course-switch-container">
+                    <div class="course-switcher" role="tablist" aria-label="Выбор курса">
+                        <button class="course-tab active" id="courseTab1" data-course="course1" type="button" role="tab" aria-selected="true">
+                            <span class="course-tab-vol">Том I</span>
+                            <span class="course-tab-title">Вводный</span>
+                        </button>
+                        <button class="course-tab" id="courseTab2" data-course="course2" type="button" role="tab" aria-selected="false">
+                            <span class="course-tab-vol">Том II</span>
+                            <span class="course-tab-title">Продвинутый</span>
+                        </button>
+                    </div>
+                </div>
                 <h2>Содержание</h2>
                 <div id="lessonsList"></div>
             </nav>
