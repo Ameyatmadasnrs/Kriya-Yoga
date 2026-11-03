@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Крийя Йога — электронная библиотека</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=20261103_2">
 </head>
 <body>
     <div id="app">
@@ -110,6 +110,7 @@
             <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="bookmarksTitle" tabindex="-1">
                 <button class="close-btn" id="closeBookmarks" type="button" aria-label="Закрыть закладки">&times;</button>
                 <h2 id="bookmarksTitle">Закладки</h2>
+                <div id="bookmarkCurrentAction" class="bookmark-current-action"></div>
                 <div id="bookmarksList" class="list-container"></div>
             </div>
         </div>
@@ -141,9 +142,17 @@
             </div>
         </div>
 
+        <!-- Selection Bookmark Popover -->
+        <div id="selectionBookmarkPopover" class="selection-bookmark-popover" style="display: none;" aria-hidden="true">
+            <button class="selection-bookmark-btn" id="popoverBookmarkBtn" type="button" aria-label="Сохранить выделенный фрагмент в закладки">
+                <span class="selection-popover-icon">🔖</span>
+                <span class="selection-popover-text">В закладки</span>
+            </button>
+        </div>
+
         <!-- Toast Notification -->
         <div class="toast" id="toast"></div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=20261103_2"></script>
 </body></html>

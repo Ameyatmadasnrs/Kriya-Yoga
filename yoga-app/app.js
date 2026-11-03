@@ -53,6 +53,7 @@ class YogaApp {
         this.achievements = [];
         this.expandedLessons = new Set();
         this.theme = localStorage.getItem('yogaApp_theme') || 'normal';
+        this.activeSelection = null;
 
         this.init();
     }
@@ -75,7 +76,10 @@ class YogaApp {
         this.checkDailyStreak();
         this.updateCourseUI();
         this.renderLessonsList();
-        this.showWelcomePage();
+        const restored = await this.restoreActiveViewOnStartup();
+        if (!restored) {
+            this.showWelcomePage();
+        }
         setTimeout(() => this.prefetchOtherCourseData(), 300);
     }
 
@@ -239,6 +243,18 @@ class YogaApp {
         document.getElementById('menuToggle').addEventListener('click', () => this.toggleSidebar());
         document.getElementById('sidebarOverlay').addEventListener('click', () => this.closeSidebar());
 
+        // App title click returns to welcome page
+        document.getElementById('appTitle')?.addEventListener('click', () => this.showWelcomePage());
+
+        // Debounced scroll listener to save reading position per volume
+        let scrollTimer = null;
+        window.addEventListener('scroll', () => {
+            if (!this.currentLesson || !this.currentTopic) return;
+            if (scrollTimer) clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(() => this.saveLastReadPosition(), 350);
+        }, { passive: true });
+        window.addEventListener('beforeunload', () => this.saveLastReadPosition());
+
         // Header buttons
         document.getElementById('searchBtn').addEventListener('click', () => this.openModal('searchModal'));
         document.getElementById('bookmarksBtn').addEventListener('click', () => this.showBookmarks());
@@ -264,6 +280,60 @@ class YogaApp {
                 }
             });
         });
+
+        // Floating selection bookmark button
+        const popoverBtn = document.getElementById('popoverBookmarkBtn');
+        if (popoverBtn) {
+            popoverBtn.addEventListener('mousedown', (e) => {
+                // Prevent mousedown from clearing the selection before click fires
+                e.preventDefault();
+            });
+            popoverBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.bookmarkSelectedText();
+            });
+        }
+
+        // Comprehensive selection detection: debounced selectionchange + mouseup/touchend/pointerup
+        let selectionTimeout = null;
+        const triggerSelectionCheck = (delay = 40) => {
+            if (selectionTimeout) clearTimeout(selectionTimeout);
+            selectionTimeout = setTimeout(() => this.handleTextSelection(), delay);
+        };
+
+        document.addEventListener('selectionchange', () => triggerSelectionCheck(60));
+        document.addEventListener('mouseup', () => triggerSelectionCheck(20));
+        document.addEventListener('touchend', () => triggerSelectionCheck(40));
+        document.addEventListener('pointerup', () => triggerSelectionCheck(20));
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'Shift' || e.key.startsWith('Arrow')) {
+                triggerSelectionCheck(30);
+            } else if (e.key === 'Escape') {
+                this.hideSelectionPopover();
+            }
+        });
+
+        // Hide popover if clicking outside
+        document.addEventListener('mousedown', (e) => {
+            if (!e.target.closest('#selectionBookmarkPopover')) {
+                if (!e.target.closest('#bookmarksBtn') && !e.target.closest('#bookmarksModal')) {
+                    setTimeout(() => {
+                        const sel = window.getSelection();
+                        if (!sel || sel.isCollapsed) {
+                            this.hideSelectionPopover();
+                        }
+                    }, 50);
+                }
+            }
+        });
+
+        // Reposition smoothly on scroll instead of instantly hiding
+        window.addEventListener('scroll', () => {
+            if (this.activeSelection) {
+                this.repositionSelectionPopover();
+            }
+        }, { passive: true });
 
         window.addEventListener('resize', () => {
             const sidebar = document.getElementById('sidebar');
@@ -429,6 +499,8 @@ class YogaApp {
     }
 
     loadTopic(lessonNum, topicNum) {
+        this.hideSelectionPopover();
+        this.activeSelection = null;
         this.currentLesson = lessonNum;
         this.currentTopic = topicNum;
 
@@ -474,6 +546,14 @@ class YogaApp {
                 <div class="page-heading-group">
                     <h1>${topic.name}</h1>
                     <div class="subtitle">Тема ${topicNum}</div>
+                    <div class="content-actions top-actions">
+                        <button class="action-btn ${isBookmarked ? 'active' : ''}" onclick="app.toggleBookmark('${lessonNum}', '${topicNum}')" type="button">
+                            ${isBookmarked ? '⭐ Закладка' : '🔖 Добавить закладку'}
+                        </button>
+                        <button class="action-btn ${isFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${lessonNum}', '${topicNum}')" type="button">
+                            ${isFavorite ? '❤️ В избранном' : '🤍 В избранное'}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -484,10 +564,10 @@ class YogaApp {
             <div class="page-number">Тема ${topicNum} из ${Object.keys(this.data.lessons[lessonNum].topics).length}</div>
 
             <div class="content-actions">
-                <button class="action-btn ${isBookmarked ? 'active' : ''}" onclick="app.toggleBookmark('${lessonNum}', '${topicNum}')">
+                <button class="action-btn ${isBookmarked ? 'active' : ''}" onclick="app.toggleBookmark('${lessonNum}', '${topicNum}')" type="button">
                     ${isBookmarked ? '⭐ Закладка' : '🔖 Добавить закладку'}
                 </button>
-                <button class="action-btn ${isFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${lessonNum}', '${topicNum}')">
+                <button class="action-btn ${isFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${lessonNum}', '${topicNum}')" type="button">
                     ${isFavorite ? '❤️ В избранном' : '🤍 В избранное'}
                 </button>
             </div>
@@ -644,7 +724,7 @@ class YogaApp {
             'последовательность', 'продолжительность занятий',
             'дыхание осознание и продолжительность', 'польза практики',
             'благотворное действие', 'ограничения и предосторожности',
-            'противопоказания', 'примечания', 'внимание', 'рекомендации',
+            'противопоказания', 'примечания', 'примечание', 'внимание', 'рекомендации',
             'оборудование', 'функции носа', 'резюме', 'ограничения',
             'последовательность выполнения', 'последовательность и время занятий',
             'осознание и продолжительность', 'дыхание и осознание',
@@ -656,7 +736,14 @@ class YogaApp {
             'различные методы регулирования праны', 'анатомия', 'мантра',
             'словесные инструкции', 'положение тела', 'начальное положение',
             'конечное положение', 'основные положения', 'ограничения и противопоказания',
-            'приготовления', 'количество повторений'
+            'приготовления', 'количество повторений',
+            'терминология', 'упоминания в текстах', 'атрибуты', 'обоснование',
+            'варианты', 'правила', 'важные правила', 'физиология', 'символика',
+            'советы', 'дополнительные замечания', 'предостережение',
+            'практические указания', 'время занятий', 'частота занятий',
+            'время и частота занятий', 'продолжительность',
+            'подготовка к другим практикам', 'осознание и дыхание',
+            'основная техника', 'характеристики чакр', 'практика'
         ].map(headingKey));
 
         // Exercise names and image captions already present in the book data are
@@ -698,10 +785,24 @@ class YogaApp {
             );
         };
 
+        const isStageHeading = line => {
+            const trimmed = line.trim();
+            if (trimmed.length > 90 || /[.!?…][»”"')\]]?$/.test(trimmed)) return false;
+            return /^(?:[а-яёa-z0-9\s–—\-]+[:–—\-]\s*)?(?:упражнение|вариант|этап|стадия|часть|движение|позиция|положение)\s*\d+(?:.*)?$/i.test(trimmed);
+        };
+
         const isSectionHeading = line => {
             const normalized = headingKey(line);
-            return sectionHeadings.has(normalized)
-                || /^(?:упражнение|вариант|этап|стадия|часть|движение)\s*\d+(?:.*)?$/i.test(line.trim());
+            return sectionHeadings.has(normalized) || isStageHeading(line);
+        };
+
+        const isShlokaOrQuote = str => {
+            const s = str.trim();
+            if (!s) return false;
+            if (/^«[^»]{10,800}»(?:\s*\([^)]+\))?\.?$/.test(s)) return true;
+            if (s.length < 450 && /(?:валока|шлока|стих|гл\.|глава)\s*\d+/i.test(s)) return true;
+            if (s.length < 350 && /(?:Хеваджра\s*Тантра|Бхагавадгита|Упанишад|Катха\s*упанишада|Хатха\s*[-–—]?\s*йога\s*прадипика|Гхеранда\s*самхита|Шива\s*самхита|Мф\.\s*\d+|Ин\.\s*\d+)/i.test(s)) return true;
+            return false;
         };
 
         const escapeText = value => value
@@ -798,29 +899,45 @@ class YogaApp {
             return text.replace(/\s+/g, ' ').trim();
         };
 
-        const renderParagraph = sourceParagraph => {
+        let paraIndex = 0;
+        const renderParagraph = (sourceParagraph, isSequentialShort = false) => {
             const lines = sourceParagraph.split('\n').map(line => line.trim()).filter(Boolean);
             if (!lines.length) return '';
 
             const output = [];
             let bodyLines = [];
             let listItems = [];
+            let bulletItems = [];
 
-            const flushBody = () => {
-                if (!bodyLines.length) return;
-                const body = joinWrappedLines(bodyLines);
-                if (body) output.push(`<p>${escapeText(body)}</p>`);
-                bodyLines = [];
+            const flushBullets = () => {
+                if (!bulletItems.length) return;
+                output.push(`<ul data-para-id="p-${paraIndex++}">${bulletItems.map(item => `<li>${escapeText(joinWrappedLines([item]))}</li>`).join('')}</ul>`);
+                bulletItems = [];
             };
             const flushList = () => {
                 if (!listItems.length) return;
-                output.push(`<ol>${listItems.map(item => `<li>${escapeText(joinWrappedLines([item]))}</li>`).join('')}</ol>`);
+                output.push(`<ol data-para-id="p-${paraIndex++}">${listItems.map(item => `<li>${escapeText(joinWrappedLines([item]))}</li>`).join('')}</ol>`);
                 listItems = [];
+            };
+            const flushBody = () => {
+                if (!bodyLines.length) return;
+                const body = joinWrappedLines(bodyLines);
+                if (body) {
+                    const pid = `p-${paraIndex++}`;
+                    if (isShlokaOrQuote(body)) {
+                        output.push(`<blockquote class="shloka-quote" data-para-id="${pid}">${escapeText(body)}</blockquote>`);
+                    } else {
+                        const isCompact = isSequentialShort && body.length < 75;
+                        output.push(`<p${isCompact ? ' class="compact-p"' : ''} data-para-id="${pid}">${escapeText(body)}</p>`);
+                    }
+                }
+                bodyLines = [];
             };
 
             lines.forEach(line => {
                 const normalized = headingKey(line);
-                const isSection = isSectionHeading(line) && !/[.!?…][»”\"')\]]?$/.test(line.trim());
+                const isStage = isStageHeading(line);
+                const isSection = isSectionHeading(line) && !/[.!?…][»”"')\]]?$/.test(line.trim());
                 const isExercise = exerciseHeadings.has(normalized);
                 const isPrintedTopicHeading = /^Урок\s+\d+\.\s*\S/i.test(line)
                     || /(?:\.\s*){2,}/.test(line);
@@ -830,14 +947,33 @@ class YogaApp {
                     && /[А-ЯЁ]/.test(line.replace(/[\d\s.\-–—]/g, ''));
 
                 if (isSection || isExercise || isPrintedTopicHeading || isCapsHeading) {
+                    flushBullets();
                     flushList();
                     flushBody();
-                    output.push(`<${isSection ? 'h4' : 'h3'}>${escapeText(line)}</${isSection ? 'h4' : 'h3'}>`);
+                    const pid = `p-${paraIndex++}`;
+                    if (isStage) {
+                        output.push(`<h4 class="stage-heading" data-para-id="${pid}">${escapeText(line)}</h4>`);
+                    } else if (isSection) {
+                        output.push(`<h4 data-para-id="${pid}">${escapeText(line)}</h4>`);
+                    } else {
+                        output.push(`<h3 data-para-id="${pid}">${escapeText(line)}</h3>`);
+                    }
                     return;
+                }
+
+                const bulletItem = line.match(/^[-–—*•]\s+(.+)$/);
+                if (bulletItem) {
+                    flushList();
+                    flushBody();
+                    bulletItems.push(bulletItem[1]);
+                    return;
+                } else if (bulletItems.length) {
+                    flushBullets();
                 }
 
                 const numberedItem = line.match(/^\d+[.)]\s+(.+)$/);
                 if (numberedItem) {
+                    flushBullets();
                     flushBody();
                     listItems.push(numberedItem[1]);
                 } else if (listItems.length) {
@@ -853,6 +989,7 @@ class YogaApp {
                 }
             });
 
+            flushBullets();
             flushList();
             flushBody();
             return output.join('');
@@ -1050,6 +1187,33 @@ class YogaApp {
             })));
             paragraphEntries.splice(rightIndex, 1);
         });
+
+        // Merge broken sentence paragraphs across double-newlines within topics
+        for (let i = 0; i < paragraphEntries.length - 1; i++) {
+            const left = paragraphEntries[i];
+            const right = paragraphEntries[i + 1];
+            if (left.isFootnote || right.isFootnote) continue;
+
+            const leftTrim = left.text.trim();
+            const rightTrim = right.text.trim();
+            const leftEndsUnfinished = !/[.!?…:»”\)]\s*$/.test(leftTrim);
+            const rightStartsLower = /^[а-яё]/.test(rightTrim)
+                && !isSectionHeading(rightTrim)
+                && !/^\d+[.)]\s/.test(rightTrim)
+                && !/^[-–—*•]\s/.test(rightTrim);
+
+            if (leftEndsUnfinished && rightStartsLower) {
+                const offset = left.text.length + 1;
+                left.text += `\n${right.text}`;
+                if (right.pageSpans) {
+                    left.pageSpans.push(...right.pageSpans.map(span => ({
+                        start: span.start + offset, end: span.end + offset, page: span.page
+                    })));
+                }
+                paragraphEntries.splice(i + 1, 1);
+                i--;
+            }
+        }
 
         const normalizeWithOffsets = value => {
             let normalized = '';
@@ -1260,10 +1424,14 @@ class YogaApp {
 
         paragraphEntries.forEach((entry, entryIndex) => {
             const events = (imageEvents.get(entryIndex) || []).sort((a, b) => a.offset - b.offset || a.order - b.order);
+            const prevLen = paragraphEntries[entryIndex - 1]?.text.length || 999;
+            const nextLen = paragraphEntries[entryIndex + 1]?.text.length || 999;
+            const isSeqShort = entry.text.length < 75 && (prevLen < 75 || nextLen < 75);
+
             let cursor = 0;
             for (let index = 0; index < events.length;) {
                 const offset = Math.min(entry.text.length, events[index].offset);
-                if (offset > cursor) htmlResult += renderParagraph(entry.text.slice(cursor, offset));
+                if (offset > cursor) htmlResult += renderParagraph(entry.text.slice(cursor, offset), isSeqShort);
                 const group = [];
                 while (index < events.length && Math.min(entry.text.length, events[index].offset) === offset) {
                     group.push(events[index].pos);
@@ -1276,13 +1444,13 @@ class YogaApp {
                 if (cursor < entry.text.length) {
                     const chunk = entry.text.slice(cursor);
                     htmlResult += entry.isFootnote
-                        ? `<div class="topic-footnote">${renderParagraph(chunk)}</div>`
-                        : renderParagraph(chunk);
+                        ? `<div class="topic-footnote">${renderParagraph(chunk, false)}</div>`
+                        : renderParagraph(chunk, isSeqShort);
                 }
             } else {
                 htmlResult += entry.isFootnote
-                    ? `<div class="topic-footnote">${renderParagraph(entry.text)}</div>`
-                    : renderParagraph(entry.text);
+                    ? `<div class="topic-footnote">${renderParagraph(entry.text, false)}</div>`
+                    : renderParagraph(entry.text, isSeqShort);
             }
         });
 
@@ -1308,6 +1476,56 @@ class YogaApp {
             </div>`;
     }
 
+    escapeText(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    getCurrentReadingLocation() {
+        let courseId = this.currentCourse || 'course1';
+        let lessonNum = this.currentLesson;
+        let topicNum = this.currentTopic;
+        let activeInfo = null;
+
+        if (lessonNum && topicNum && this.data?.lessons?.[lessonNum]?.topics?.[topicNum]) {
+            activeInfo = this.getActiveParagraphInfo();
+        } else {
+            const lrJson = localStorage.getItem(`yogaApp_lastRead_${courseId}`);
+            let lr = null;
+            if (lrJson) {
+                try { lr = JSON.parse(lrJson); } catch (e) {}
+            }
+            if (lr && lr.lesson && lr.topic && this.data?.lessons?.[lr.lesson]?.topics?.[lr.topic]) {
+                lessonNum = String(lr.lesson);
+                topicNum = String(lr.topic);
+                activeInfo = { paraId: lr.paraId, snippet: lr.snippet };
+            } else {
+                lessonNum = courseId === 'course2' ? '13' : '1';
+                topicNum = '1';
+                activeInfo = null;
+            }
+        }
+
+        lessonNum = String(lessonNum);
+        topicNum = String(topicNum);
+        const lesson = this.data?.lessons?.[lessonNum];
+        const topic = lesson?.topics?.[topicNum];
+        const topicName = topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`;
+        const paraId = activeInfo?.paraId || null;
+        let snippet = activeInfo?.snippet || topicName;
+
+        return {
+            course: courseId,
+            lesson: lessonNum,
+            topic: topicNum,
+            name: topicName,
+            paraId,
+            snippet
+        };
+    }
+
     updateReadingProgress(lessonNum, topicNum) {
         const key = `${lessonNum}-${topicNum}`;
         if (!this.readProgress[key]) {
@@ -1324,82 +1542,397 @@ class YogaApp {
         this.saveUserData();
     }
 
+    getActiveParagraphInfo() {
+        const contentArea = document.getElementById('contentArea');
+        if (!contentArea) return null;
+
+        const header = document.querySelector('.header');
+        const headerBottom = (header?.getBoundingClientRect().bottom || 68) + 20;
+
+        const paras = contentArea.querySelectorAll('[data-para-id]');
+        if (!paras.length) return null;
+
+        let activeEl = null;
+        for (const el of paras) {
+            const rect = el.getBoundingClientRect();
+            if (rect.bottom > headerBottom) {
+                activeEl = el;
+                break;
+            }
+        }
+        if (!activeEl) activeEl = paras[0];
+
+        const paraId = activeEl.getAttribute('data-para-id') || null;
+        let snippet = (activeEl.textContent || '').replace(/\s+/g, ' ').trim();
+        if (snippet.length > 95) {
+            snippet = snippet.slice(0, 92) + '…';
+        }
+
+        return { paraId, snippet, element: activeEl };
+    }
+
     toggleBookmark(lessonNum, topicNum) {
+        lessonNum = String(lessonNum || this.currentLesson);
+        topicNum = String(topicNum || this.currentTopic);
+
+        // If the user currently has text selected in this topic, save that selection
+        if (this.activeSelection && this.activeSelection.text &&
+            String(this.activeSelection.lesson) === lessonNum &&
+            String(this.activeSelection.topic) === topicNum) {
+            this.bookmarkSelectedText();
+            return;
+        }
+
         const courseId = this.currentCourse;
+        const activeInfo = this.getActiveParagraphInfo();
+        const paraId = activeInfo?.paraId || null;
+        const snippet = activeInfo?.snippet || '';
+
         const existingIndex = this.bookmarks.findIndex(b =>
             (b.course || 'course1') === courseId &&
-            String(b.lesson) === String(lessonNum) &&
-            String(b.topic) === String(topicNum)
+            String(b.lesson) === lessonNum &&
+            String(b.topic) === topicNum &&
+            !b.selectedText
         );
-        const lesson = this.data.lessons[lessonNum];
-        const topic = lesson?.topics[topicNum];
 
+        const lesson = this.data?.lessons?.[lessonNum];
+        const topic = lesson?.topics?.[topicNum];
+        const topicName = topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`;
+
+        let isNowBookmarked = false;
         if (existingIndex >= 0) {
             this.bookmarks.splice(existingIndex, 1);
             this.showToast('Закладка удалена');
+            isNowBookmarked = this.bookmarks.some(b =>
+                (b.course || 'course1') === courseId &&
+                String(b.lesson) === lessonNum &&
+                String(b.topic) === topicNum
+            );
         } else {
-            this.bookmarks.push({
+            this.bookmarks.unshift({
+                id: `bm-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                 course: courseId,
                 lesson: lessonNum,
                 topic: topicNum,
-                name: topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`,
+                name: topicName,
+                paraId: paraId,
+                snippet: snippet || topicName,
                 added: Date.now()
             });
-            this.showToast('Закладка добавлена');
+            this.showToast(`Место чтения сохранено: ${topicName}`);
+            isNowBookmarked = true;
         }
 
         this.saveUserData();
-        this.renderTopic(lessonNum, topicNum, topic);
+        this.updateBookmarkButtonState(isNowBookmarked);
     }
 
-    toggleFavorite(lessonNum, topicNum) {
-        const courseId = this.currentCourse;
-        const existingIndex = this.favorites.findIndex(f =>
-            (f.course || 'course1') === courseId &&
-            String(f.lesson) === String(lessonNum) &&
-            String(f.topic) === String(topicNum)
+    handleTextSelection() {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+            this.hideSelectionPopover();
+            return;
+        }
+
+        const rawText = selection.toString();
+        const text = rawText.replace(/\s+/g, ' ').trim();
+        if (!text || text.length < 1) {
+            this.hideSelectionPopover();
+            return;
+        }
+
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const element = container.nodeType === 3 ? container.parentElement : container;
+        if (!element) {
+            this.hideSelectionPopover();
+            return;
+        }
+
+        // Ignore selections inside navigation sidebar, header, or dialog modals
+        if (element.closest('.sidebar') || element.closest('.header') || element.closest('.modal')) {
+            this.hideSelectionPopover();
+            return;
+        }
+
+        // Must be within the main reader surface
+        const inMainContent = element.closest('#contentArea') || element.closest('.main-content') || element.closest('.page-content');
+        if (!inMainContent) {
+            this.hideSelectionPopover();
+            return;
+        }
+
+        // Find enclosing paragraph or element with data-para-id
+        const paraEl = element.closest('[data-para-id]') || element.querySelector?.('[data-para-id]');
+        const paraId = paraEl ? paraEl.getAttribute('data-para-id') : null;
+        const snippet = text.length > 95 ? text.slice(0, 92) + '…' : text;
+
+        this.activeSelection = {
+            text: text,
+            snippet: snippet,
+            paraId: paraId,
+            course: this.currentCourse,
+            lesson: String(this.currentLesson || '1'),
+            topic: String(this.currentTopic || '1'),
+            timestamp: Date.now()
+        };
+
+        this.showSelectionPopover(range);
+    }
+
+    showSelectionPopover(range) {
+        const popover = document.getElementById('selectionBookmarkPopover');
+        if (!popover || !range) return;
+
+        let rect = range.getBoundingClientRect();
+        if ((!rect || (rect.width === 0 && rect.height === 0)) && range.getClientRects) {
+            const rects = range.getClientRects();
+            if (rects.length > 0) {
+                rect = rects[0];
+            }
+        }
+
+        if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.bottom === 0)) {
+            this.hideSelectionPopover();
+            return;
+        }
+
+        const viewportWidth = window.innerWidth;
+        const popoverWidth = 140;
+        const padding = 12;
+        let left = rect.left + rect.width / 2;
+        left = Math.max(popoverWidth / 2 + padding, Math.min(viewportWidth - popoverWidth / 2 - padding, left));
+
+        const header = document.querySelector('.header');
+        const headerBottom = (header?.getBoundingClientRect().bottom || 60) + 12;
+
+        let top = rect.top - 8;
+        let placement = 'placement-top';
+
+        if (top < headerBottom) {
+            top = rect.bottom + 8;
+            placement = 'placement-bottom';
+        }
+
+        popover.className = `selection-bookmark-popover show ${placement}`;
+        popover.style.left = `${Math.round(left)}px`;
+        popover.style.top = `${Math.round(top)}px`;
+        popover.style.display = 'block';
+        popover.setAttribute('aria-hidden', 'false');
+    }
+
+    repositionSelectionPopover() {
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+            this.hideSelectionPopover();
+            return;
+        }
+        try {
+            const range = selection.getRangeAt(0);
+            this.showSelectionPopover(range);
+        } catch (e) {
+            this.hideSelectionPopover();
+        }
+    }
+
+    hideSelectionPopover() {
+        const popover = document.getElementById('selectionBookmarkPopover');
+        if (popover) {
+            popover.className = 'selection-bookmark-popover';
+            popover.style.display = 'none';
+            popover.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    bookmarkSelectedText() {
+        let sel = this.activeSelection;
+        if (!sel || !sel.text) {
+            const currentSel = window.getSelection();
+            if (currentSel && !currentSel.isCollapsed) {
+                this.handleTextSelection();
+                sel = this.activeSelection;
+            }
+        }
+
+        if (!sel || !sel.text) {
+            this.saveCurrentBookmark();
+            return;
+        }
+
+        const courseId = sel.course || this.currentCourse;
+        const lessonNum = String(sel.lesson || this.currentLesson);
+        const topicNum = String(sel.topic || this.currentTopic);
+        const lesson = this.data?.lessons?.[lessonNum];
+        const topic = lesson?.topics?.[topicNum];
+        const topicName = topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`;
+
+        const existingIndex = this.bookmarks.findIndex(b =>
+            (b.course || 'course1') === courseId &&
+            String(b.lesson) === lessonNum &&
+            String(b.topic) === topicNum &&
+            b.selectedText === sel.text
         );
-        const lesson = this.data.lessons[lessonNum];
-        const topic = lesson?.topics[topicNum];
 
         if (existingIndex >= 0) {
-            this.favorites.splice(existingIndex, 1);
-            this.showToast('Удалено из избранного');
+            this.bookmarks[existingIndex].added = Date.now();
+            this.bookmarks[existingIndex].paraId = sel.paraId;
+            this.showToast(`Закладка уже сохранена: «${sel.snippet}»`);
         } else {
-            this.favorites.push({
+            this.bookmarks.unshift({
+                id: `bm-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
                 course: courseId,
                 lesson: lessonNum,
                 topic: topicNum,
-                name: topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`,
+                name: topicName,
+                paraId: sel.paraId,
+                selectedText: sel.text,
+                snippet: sel.snippet,
                 added: Date.now()
             });
-            this.showToast('Добавлено в избранное');
+            this.showToast(`Выделенный фрагмент сохранён в закладки: «${sel.snippet}»`);
         }
 
         this.saveUserData();
-        this.renderTopic(lessonNum, topicNum, topic);
+        this.updateBookmarkButtonState(true);
+        this.hideSelectionPopover();
+
+        // Highlight the selected text right away on current page
+        this.highlightSelectedText(sel.paraId, sel.text);
+
+        // Clear native window selection
+        try {
+            window.getSelection()?.removeAllRanges();
+        } catch (e) {}
+
+        this.activeSelection = null;
+    }
+
+    saveCurrentBookmark() {
+        // If user actively selected text in the current topic, save that selection!
+        if (this.activeSelection && this.activeSelection.text &&
+            String(this.activeSelection.lesson) === String(this.currentLesson) &&
+            String(this.activeSelection.topic) === String(this.currentTopic) &&
+            (this.activeSelection.course || this.currentCourse) === this.currentCourse) {
+            this.bookmarkSelectedText();
+            this.showBookmarks();
+            return;
+        }
+
+        const loc = this.getCurrentReadingLocation();
+        const courseId = loc.course;
+        const lessonNum = loc.lesson;
+        const topicNum = loc.topic;
+        const topicName = loc.name;
+        const paraId = loc.paraId;
+        const snippet = loc.snippet;
+
+        // Check if there is already a general bookmark (without selectedText) for this topic
+        const existingIndex = this.bookmarks.findIndex(b =>
+            (b.course || 'course1') === courseId &&
+            String(b.lesson) === lessonNum &&
+            String(b.topic) === topicNum &&
+            !b.selectedText
+        );
+
+        if (existingIndex >= 0) {
+            this.bookmarks[existingIndex].paraId = paraId;
+            this.bookmarks[existingIndex].snippet = snippet;
+            this.bookmarks[existingIndex].added = Date.now();
+            this.showToast(`Закладка обновлена: ${topicName}`);
+        } else {
+            this.bookmarks.unshift({
+                id: `bm-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                course: courseId,
+                lesson: lessonNum,
+                topic: topicNum,
+                name: topicName,
+                paraId: paraId,
+                snippet: snippet,
+                added: Date.now()
+            });
+            this.showToast(`Место чтения сохранено: ${topicName}`);
+        }
+
+        this.saveUserData();
+        this.updateBookmarkButtonState(true);
+        this.showBookmarks();
+    }
+
+    updateBookmarkButtonState(isBookmarked) {
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            if (btn.textContent.includes('Закладка') || btn.getAttribute('onclick')?.includes('toggleBookmark')) {
+                btn.classList.toggle('active', isBookmarked);
+                btn.innerHTML = isBookmarked ? '⭐ Закладка' : '🔖 Добавить закладку';
+            }
+        });
     }
 
     showBookmarks() {
         const container = document.getElementById('bookmarksList');
+        const actionContainer = document.getElementById('bookmarkCurrentAction');
+        const loc = this.getCurrentReadingLocation();
+        const cId = loc.course || this.currentCourse;
+        const badgeClass = cId === 'course2' ? 'badge-vol2' : 'badge-vol1';
+        const badgeText = cId === 'course2' ? 'Том II' : 'Том I';
+        const locationHintText = `Урок ${loc.lesson}, Тема ${loc.topic} · ${loc.name}`;
+
+        // Check if there's an active text selection in the current topic
+        const hasSelection = this.activeSelection && this.activeSelection.text &&
+            String(this.activeSelection.lesson) === String(this.currentLesson) &&
+            String(this.activeSelection.topic) === String(this.currentTopic);
+
+        const buttonLabel = hasSelection
+            ? `🔖 Сохранить выделенное: «${this.escapeText(this.activeSelection.snippet)}»`
+            : `🔖 Сохранить это место чтения`;
+
+        // The action bar is ALWAYS shown in both empty and populated states
+        if (actionContainer) {
+            actionContainer.innerHTML = `
+                <div class="bookmark-action-bar">
+                    <button class="action-btn bookmark-save-primary-btn" onclick="app.saveCurrentBookmark()" type="button">
+                        ${buttonLabel}
+                    </button>
+                    <div class="bookmark-current-place-hint" title="${this.escapeText(locationHintText)}">
+                        <span class="course-badge ${badgeClass}">${badgeText}</span>
+                        <span class="place-hint-text">${this.escapeText(locationHintText)}</span>
+                    </div>
+                </div>
+            `;
+        }
 
         if (this.bookmarks.length === 0) {
-            container.innerHTML = '<div class="empty-list">Нет закладок</div>';
+            container.innerHTML = `
+                <div class="bookmarks-empty-state">
+                    <div class="empty-list-icon">🔖</div>
+                    <div class="empty-list-title">Нет закладок</div>
+                    <p class="empty-list-desc">Выделите слово или предложение в тексте и нажмите <strong>«В закладки»</strong>, либо нажмите кнопку выше, чтобы сохранить место чтения.</p>
+                </div>
+            `;
             this.openModal('bookmarksModal');
             return;
         }
 
         container.innerHTML = this.bookmarks.map((b, index) => {
-            const cId = b.course || 'course1';
-            const badgeClass = cId === 'course2' ? 'badge-vol2' : 'badge-vol1';
-            const badgeText = cId === 'course2' ? 'Том II' : 'Том I';
+            const bCId = b.course || 'course1';
+            const bBadgeClass = bCId === 'course2' ? 'badge-vol2' : 'badge-vol1';
+            const bBadgeText = bCId === 'course2' ? 'Том II' : 'Том I';
+            const dateStr = b.added ? new Date(b.added).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) : '';
+            const isSel = !!b.selectedText;
+            const snippetText = b.selectedText || b.snippet || '';
+
             return `
-                <div class="list-item">
+                <div class="list-item" tabindex="0" role="button"
+                     aria-label="Перейти к закладке: ${this.escapeText(b.name)}"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.loadBookmark(${index});}else if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();app.removeBookmark(${index});}">
                     <div class="list-item-content" onclick="app.loadBookmark(${index})">
-                        <div class="list-item-title"><span class="course-badge ${badgeClass}">${badgeText}</span>${b.name}</div>
-                        <div class="list-item-subtitle">Урок ${b.lesson}, Тема ${b.topic}</div>
+                        <div class="list-item-title">
+                            <span class="course-badge ${bBadgeClass}">${bBadgeText}</span>
+                            ${this.escapeText(b.name)}
+                        </div>
+                        <div class="list-item-subtitle">Урок ${b.lesson}, Тема ${b.topic}${dateStr ? ` · ${dateStr}` : ''}</div>
+                        ${snippetText ? `<div class="bookmark-snippet ${isSel ? 'is-selection' : ''}">${isSel ? '<span class="bookmark-quote-icon">📍</span> ' : ''}«${this.escapeText(snippetText)}»</div>` : ''}
                     </div>
-                    <button class="list-item-remove" onclick="app.removeBookmark(${index})" title="Удалить закладку">×</button>
+                    <button class="list-item-remove" onclick="event.stopPropagation(); app.removeBookmark(${index})" title="Удалить закладку" aria-label="Удалить закладку" type="button">×</button>
                 </div>
             `;
         }).join('');
@@ -1409,15 +1942,207 @@ class YogaApp {
 
     async loadBookmark(index) {
         const bookmark = this.bookmarks[index];
-        if (bookmark) {
-            const cId = bookmark.course || 'course1';
-            if (cId !== this.currentCourse) {
-                await this.switchCourse(cId, bookmark.lesson, bookmark.topic);
-            } else {
-                this.loadTopic(bookmark.lesson, bookmark.topic);
-            }
-            this.closeModal('bookmarksModal');
+        if (!bookmark) return;
+
+        const cId = bookmark.course || 'course1';
+        this.closeModal('bookmarksModal');
+
+        const isDifferentCourse = cId !== this.currentCourse;
+        const isDifferentTopic = String(this.currentLesson) !== String(bookmark.lesson) || String(this.currentTopic) !== String(bookmark.topic);
+
+        if (isDifferentCourse) {
+            await this.switchCourse(cId, bookmark.lesson, bookmark.topic);
+        } else if (isDifferentTopic || !document.querySelector('.page-content')) {
+            this.loadTopic(bookmark.lesson, bookmark.topic);
         }
+
+        this.scrollToBookmarkTarget(bookmark.paraId, bookmark.selectedText);
+    }
+
+    highlightSelectedText(paraId, selectedText) {
+        if (!selectedText || typeof selectedText !== 'string') return null;
+        const cleanSearch = selectedText.trim();
+        if (!cleanSearch) return null;
+
+        // Clear previous highlight marks
+        document.querySelectorAll('mark.bookmark-word-highlight').forEach(mark => {
+            const parent = mark.parentNode;
+            if (parent) {
+                while (mark.firstChild) {
+                    parent.insertBefore(mark.firstChild, mark);
+                }
+                parent.removeChild(mark);
+            }
+        });
+
+        // Search in target paragraph first, then full .page-content
+        let containers = [];
+        if (paraId) {
+            const paraEl = document.querySelector(`[data-para-id="${paraId}"]`);
+            if (paraEl) containers.push(paraEl);
+        }
+        const pageContent = document.querySelector('.page-content');
+        if (pageContent && !containers.includes(pageContent)) {
+            containers.push(pageContent);
+        }
+
+        for (const container of containers) {
+            // Pass 1: exact single text node match
+            const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            while ((node = walker.nextNode())) {
+                const val = node.nodeValue || '';
+                const idx = val.indexOf(cleanSearch);
+                if (idx !== -1) {
+                    try {
+                        const midNode = node.splitText(idx);
+                        midNode.splitText(cleanSearch.length);
+                        const mark = document.createElement('mark');
+                        mark.className = 'bookmark-word-highlight';
+                        midNode.parentNode.insertBefore(mark, midNode);
+                        mark.appendChild(midNode);
+                        return mark;
+                    } catch (e) {
+                        // ignore and continue
+                    }
+                }
+            }
+
+            // Pass 2: normalized single text node match
+            const normSearch = cleanSearch.replace(/\s+/g, ' ');
+            const walker2 = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            while ((node = walker2.nextNode())) {
+                const val = node.nodeValue || '';
+                const normVal = val.replace(/\s+/g, ' ');
+                const normIdx = normVal.indexOf(normSearch);
+                if (normIdx !== -1) {
+                    try {
+                        const matchLen = Math.min(cleanSearch.length, val.length - normIdx);
+                        const midNode = node.splitText(normIdx);
+                        midNode.splitText(matchLen);
+                        const mark = document.createElement('mark');
+                        mark.className = 'bookmark-word-highlight';
+                        midNode.parentNode.insertBefore(mark, midNode);
+                        mark.appendChild(midNode);
+                        return mark;
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+            }
+
+            // Pass 3: cross-node search
+            const walker3 = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+            let fullText = '';
+            const nodeMap = [];
+            while ((node = walker3.nextNode())) {
+                const str = node.nodeValue || '';
+                const start = fullText.length;
+                fullText += str;
+                const end = fullText.length;
+                nodeMap.push({ node, start, end });
+            }
+
+            let matchStart = fullText.indexOf(cleanSearch);
+            let matchLength = cleanSearch.length;
+            if (matchStart === -1) {
+                const normFull = fullText.replace(/\s+/g, ' ');
+                matchStart = normFull.indexOf(normSearch);
+                matchLength = normSearch.length;
+            }
+
+            if (matchStart !== -1) {
+                const matchEnd = matchStart + matchLength;
+                let startNode = null, startOffset = 0;
+                let endNode = null, endOffset = 0;
+
+                for (const item of nodeMap) {
+                    if (!startNode && matchStart >= item.start && matchStart < item.end) {
+                        startNode = item.node;
+                        startOffset = matchStart - item.start;
+                    }
+                    if (matchEnd > item.start && matchEnd <= item.end) {
+                        endNode = item.node;
+                        endOffset = matchEnd - item.start;
+                        break;
+                    }
+                }
+
+                if (startNode && endNode) {
+                    try {
+                        const range = document.createRange();
+                        range.setStart(startNode, Math.min(startOffset, startNode.nodeValue.length));
+                        range.setEnd(endNode, Math.min(endOffset, endNode.nodeValue.length));
+                        const mark = document.createElement('mark');
+                        mark.className = 'bookmark-word-highlight';
+                        try {
+                            range.surroundContents(mark);
+                        } catch (err) {
+                            mark.appendChild(range.extractContents());
+                            range.insertNode(mark);
+                        }
+                        return mark;
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    scrollToBookmarkTarget(paraId, selectedText) {
+        const doScroll = () => {
+            const header = document.querySelector('.header');
+            const headerOffset = (header?.offsetHeight || 68) + 20;
+
+            // If selectedText is provided, try highlighting and scrolling to exact text
+            if (selectedText) {
+                const highlightedEl = this.highlightSelectedText(paraId, selectedText);
+                if (highlightedEl) {
+                    const rect = highlightedEl.getBoundingClientRect();
+                    const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+                    const targetY = currentY + rect.top - headerOffset;
+                    window.scrollTo({
+                        top: Math.max(0, targetY),
+                        behavior: 'smooth'
+                    });
+                    return;
+                }
+            }
+
+            if (paraId) {
+                const targetEl = document.querySelector(`[data-para-id="${paraId}"]`) || document.getElementById(paraId);
+                if (targetEl) {
+                    const rect = targetEl.getBoundingClientRect();
+                    const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+                    const targetY = currentY + rect.top - headerOffset;
+                    window.scrollTo({
+                        top: Math.max(0, targetY),
+                        behavior: 'smooth'
+                    });
+                    targetEl.classList.add('bookmark-target-highlight');
+                    setTimeout(() => targetEl.classList.remove('bookmark-target-highlight'), 2600);
+                    return;
+                }
+            }
+
+            const topicHeading = document.querySelector('.topic-page-header') || document.querySelector('.page-header');
+            if (topicHeading) {
+                const rect = topicHeading.getBoundingClientRect();
+                const currentY = window.scrollY || document.documentElement.scrollTop || 0;
+                const targetY = currentY + rect.top - headerOffset;
+                window.scrollTo({
+                    top: Math.max(0, targetY),
+                    behavior: 'smooth'
+                });
+            }
+        };
+
+        requestAnimationFrame(() => {
+            setTimeout(doScroll, 100);
+        });
     }
 
     removeBookmark(index) {
@@ -1425,6 +2150,14 @@ class YogaApp {
         this.saveUserData();
         this.showBookmarks();
         this.showToast('Закладка удалена');
+        if (this.currentLesson && this.currentTopic) {
+            const isBookmarked = this.bookmarks.some(b =>
+                (b.course || 'course1') === this.currentCourse &&
+                String(b.lesson) === String(this.currentLesson) &&
+                String(b.topic) === String(this.currentTopic)
+            );
+            this.updateBookmarkButtonState(isBookmarked);
+        }
     }
 
     showFavorites() {
@@ -1467,11 +2200,61 @@ class YogaApp {
         }
     }
 
+    toggleFavorite(lessonNum, topicNum) {
+        lessonNum = String(lessonNum || this.currentLesson);
+        topicNum = String(topicNum || this.currentTopic);
+        const courseId = this.currentCourse;
+        const existingIndex = this.favorites.findIndex(f =>
+            (f.course || 'course1') === courseId &&
+            String(f.lesson) === lessonNum &&
+            String(f.topic) === topicNum
+        );
+        const lesson = this.data?.lessons?.[lessonNum];
+        const topic = lesson?.topics?.[topicNum];
+        const topicName = topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`;
+
+        let isNowFavorite = false;
+        if (existingIndex >= 0) {
+            this.favorites.splice(existingIndex, 1);
+            this.showToast('Удалено из избранного');
+            isNowFavorite = false;
+        } else {
+            this.favorites.unshift({
+                course: courseId,
+                lesson: lessonNum,
+                topic: topicNum,
+                name: topicName,
+                added: Date.now()
+            });
+            this.showToast(`Добавлено в избранное: ${topicName}`);
+            isNowFavorite = true;
+        }
+        this.saveUserData();
+        this.updateFavoriteButtonState(isNowFavorite);
+    }
+
+    updateFavoriteButtonState(isFavorite) {
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            if (btn.textContent.includes('избранн') || btn.getAttribute('onclick')?.includes('toggleFavorite')) {
+                btn.classList.toggle('active', isFavorite);
+                btn.innerHTML = isFavorite ? '❤️ В избранном' : '🤍 В избранное';
+            }
+        });
+    }
+
     removeFavorite(index) {
         this.favorites.splice(index, 1);
         this.saveUserData();
         this.showFavorites();
         this.showToast('Удалено из избранного');
+        if (this.currentLesson && this.currentTopic) {
+            const isFavorite = this.favorites.some(f =>
+                (f.course || 'course1') === this.currentCourse &&
+                String(f.lesson) === String(this.currentLesson) &&
+                String(f.topic) === String(this.currentTopic)
+            );
+            this.updateFavoriteButtonState(isFavorite);
+        }
     }
 
     showProgress() {
@@ -1616,11 +2399,104 @@ class YogaApp {
         `;
     }
 
+    saveLastReadPosition() {
+        if (!this.currentLesson || !this.currentTopic || !this.data) return;
+        const courseId = this.currentCourse;
+        const activeInfo = this.getActiveParagraphInfo();
+        const lesson = this.data.lessons?.[this.currentLesson];
+        const topic = lesson?.topics?.[this.currentTopic];
+
+        const lastRead = {
+            course: courseId,
+            lesson: String(this.currentLesson),
+            topic: String(this.currentTopic),
+            topicName: topic?.name || `Урок ${this.currentLesson}, Тема ${this.currentTopic}`,
+            paraId: activeInfo?.paraId || null,
+            snippet: activeInfo?.snippet || '',
+            scrollTop: window.scrollY || document.documentElement.scrollTop || 0,
+            timestamp: Date.now()
+        };
+
+        try {
+            localStorage.setItem(`yogaApp_lastRead_${courseId}`, JSON.stringify(lastRead));
+            localStorage.setItem('yogaApp_activeView', JSON.stringify({
+                course: courseId,
+                lesson: String(this.currentLesson),
+                topic: String(this.currentTopic),
+                paraId: activeInfo?.paraId || null
+            }));
+        } catch (e) {
+            console.warn('Could not save last read position:', e);
+        }
+    }
+
+    async resumeCourse(courseId) {
+        if (!COURSES[courseId]) return;
+        const savedJson = localStorage.getItem(`yogaApp_lastRead_${courseId}`);
+        let lastRead = null;
+        if (savedJson) {
+            try { lastRead = JSON.parse(savedJson); } catch (e) {}
+        }
+
+        if (lastRead && lastRead.lesson && lastRead.topic) {
+            await this.switchCourse(courseId, lastRead.lesson, lastRead.topic);
+            if (lastRead.paraId) {
+                this.scrollToBookmarkTarget(lastRead.paraId);
+            }
+        } else {
+            const defaultLesson = courseId === 'course2' ? '13' : '1';
+            await this.switchCourse(courseId, defaultLesson, '1');
+        }
+    }
+
+    async restoreActiveViewOnStartup() {
+        const savedViewJson = localStorage.getItem('yogaApp_activeView');
+        if (!savedViewJson) return false;
+
+        try {
+            const activeView = JSON.parse(savedViewJson);
+            if (activeView && activeView.course && activeView.lesson && activeView.topic && COURSES[activeView.course]) {
+                if (activeView.course !== this.currentCourse) {
+                    await this.loadCourseData(activeView.course);
+                    this.updateCourseUI();
+                    this.renderLessonsList();
+                }
+                this.loadTopic(String(activeView.lesson), String(activeView.topic));
+                if (activeView.paraId) {
+                    this.scrollToBookmarkTarget(activeView.paraId);
+                }
+                return true;
+            }
+        } catch (e) {
+            console.warn('Could not restore active view:', e);
+        }
+        return false;
+    }
+
     showWelcomePage() {
+        try { localStorage.removeItem('yogaApp_activeView'); } catch (e) {}
+        this.currentLesson = null;
+        this.currentTopic = null;
         const contentArea = document.getElementById('contentArea');
         const activeCourse = COURSES[this.currentCourse] || COURSES.course1;
         const isVol1 = this.currentCourse === 'course1';
         const coverImg = isVol1 ? 'assets/images/img001.jpg' : 'assets/images2/img_v2_001.png';
+
+        const lr1Json = localStorage.getItem('yogaApp_lastRead_course1');
+        const lr2Json = localStorage.getItem('yogaApp_lastRead_course2');
+        let lr1 = null, lr2 = null;
+        if (lr1Json) { try { lr1 = JSON.parse(lr1Json); } catch (e) {} }
+        if (lr2Json) { try { lr2 = JSON.parse(lr2Json); } catch (e) {} }
+
+        const vol1BtnText = lr1
+            ? `Продолжить: Урок ${lr1.lesson}, Тема ${lr1.topic}`
+            : (isVol1 ? 'Читать Том I' : 'Перейти к Тому I');
+        const vol2BtnText = lr2
+            ? `Продолжить: Урок ${lr2.lesson}, Тема ${lr2.topic}`
+            : (!isVol1 ? 'Читать Том II' : 'Перейти к Тому II');
+
+        const vol1Action = lr1 ? "app.resumeCourse('course1')" : "app.switchCourse('course1', '1', '1')";
+        const vol2Action = lr2 ? "app.resumeCourse('course2')" : "app.switchCourse('course2', '13', '1')";
 
         contentArea.innerHTML = `
             <div class="page-header">
@@ -1642,8 +2518,8 @@ class YogaApp {
                         </div>
                         <h4>Вводный курс</h4>
                         <p>12 уроков (84 темы): основы хатха-йоги, шаткармы (джала нети), начальные асаны, пранаяма, осознание и расслабление (йога-нидра).</p>
-                        <button class="course-card-btn" onclick="app.switchCourse('course1', '1', '1')">
-                            ${isVol1 ? 'Читать Том I' : 'Перейти к Тому I'}
+                        <button class="course-card-btn" onclick="${vol1Action}">
+                            ${vol1BtnText}
                         </button>
                     </div>
 
@@ -1654,8 +2530,8 @@ class YogaApp {
                         </div>
                         <h4>Продвинутый курс</h4>
                         <p>12 уроков (74 темы): углубленная карма-йога и бхакти-йога, тантра, чакры (от Муладхары до Аджны), бандхи, мудры и аджапа-джапа.</p>
-                        <button class="course-card-btn" onclick="app.switchCourse('course2', '13', '1')">
-                            ${!isVol1 ? 'Читать Том II' : 'Перейти к Тому II'}
+                        <button class="course-card-btn" onclick="${vol2Action}">
+                            ${vol2BtnText}
                         </button>
                     </div>
                 </div>
@@ -1691,14 +2567,22 @@ class YogaApp {
     }
 
     openModal(modalId) {
+        this.hideSelectionPopover();
         const modal = document.getElementById(modalId);
+        if (!modal) return;
         this.modalReturnFocus = document.activeElement;
+        const currentScrollY = window.scrollY || document.documentElement.scrollTop || 0;
         modal.classList.add('show');
         modal.setAttribute('aria-hidden', 'false');
         const initialFocus = modal.id === 'searchModal'
             ? modal.querySelector('#searchInput')
             : modal.querySelector('button:not([disabled])');
-        if (initialFocus) initialFocus.focus();
+        if (initialFocus) {
+            try { initialFocus.focus({ preventScroll: true }); } catch (e) { initialFocus.focus(); }
+        }
+        if (Math.abs((window.scrollY || document.documentElement.scrollTop || 0) - currentScrollY) > 5) {
+            window.scrollTo({ top: currentScrollY, behavior: 'instant' });
+        }
     }
 
     closeModal(modalId) {
@@ -1706,7 +2590,9 @@ class YogaApp {
         if (!modal) return;
         modal.classList.remove('show');
         modal.setAttribute('aria-hidden', 'true');
-        if (this.modalReturnFocus && this.modalReturnFocus.isConnected) this.modalReturnFocus.focus();
+        if (this.modalReturnFocus && this.modalReturnFocus.isConnected) {
+            try { this.modalReturnFocus.focus({ preventScroll: true }); } catch (e) { this.modalReturnFocus.focus(); }
+        }
         this.modalReturnFocus = null;
     }
 
