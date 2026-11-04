@@ -259,13 +259,11 @@ class YogaApp {
         document.getElementById('searchBtn').addEventListener('click', () => this.openModal('searchModal'));
         document.getElementById('bookmarksBtn').addEventListener('click', () => this.showBookmarks());
         document.getElementById('favoritesBtn').addEventListener('click', () => this.showFavorites());
-        document.getElementById('progressBtn').addEventListener('click', () => this.showProgress());
 
         // Modal close buttons
         document.getElementById('closeSearch').addEventListener('click', () => this.closeModal('searchModal'));
         document.getElementById('closeBookmarks').addEventListener('click', () => this.closeModal('bookmarksModal'));
         document.getElementById('closeFavorites').addEventListener('click', () => this.closeModal('favoritesModal'));
-        document.getElementById('closeProgress').addEventListener('click', () => this.closeModal('progressModal'));
         document.getElementById('closeNotes').addEventListener('click', () => this.closeModal('notesModal'));
 
         // Search functionality
@@ -581,6 +579,12 @@ class YogaApp {
         // Setup navigation
         document.getElementById('prevBtn').addEventListener('click', () => this.navigateTopic(-1));
         document.getElementById('nextBtn').addEventListener('click', () => this.navigateTopic(1));
+
+        // Sync header bookmark and favorite buttons
+        const headerFavBtn = document.getElementById('favoritesBtn');
+        if (headerFavBtn) headerFavBtn.classList.toggle('active', isFavorite);
+        const headerBmkBtn = document.getElementById('bookmarksBtn');
+        if (headerBmkBtn) headerBmkBtn.classList.toggle('active', isBookmarked);
 
         // Reset both possible scroll containers after replacing the page, then
         // align the actual topic heading below the sticky toolbar.
@@ -2162,24 +2166,67 @@ class YogaApp {
 
     showFavorites() {
         const container = document.getElementById('favoritesList');
+        const actionContainer = document.getElementById('favoriteCurrentAction');
+
+        const lessonNum = String(this.currentLesson || '1');
+        const topicNum = String(this.currentTopic || '1');
+        const courseId = this.currentCourse || 'course1';
+        const badgeClass = courseId === 'course2' ? 'badge-vol2' : 'badge-vol1';
+        const badgeText = courseId === 'course2' ? 'Том II' : 'Том I';
+
+        const lesson = this.data?.lessons?.[lessonNum];
+        const topic = lesson?.topics?.[topicNum];
+        const topicName = topic?.name || `Урок ${lessonNum}, Тема ${topicNum}`;
+        const locationHintText = `Урок ${lessonNum}, Тема ${topicNum} · ${topicName}`;
+
+        const isCurrentFavorite = this.favorites.some(f =>
+            (f.course || 'course1') === courseId &&
+            String(f.lesson) === lessonNum &&
+            String(f.topic) === topicNum
+        );
+
+        if (actionContainer) {
+            actionContainer.innerHTML = `
+                <div class="bookmark-action-bar">
+                    <button class="action-btn bookmark-save-primary-btn ${isCurrentFavorite ? 'active' : ''}" onclick="app.toggleFavorite('${lessonNum}', '${topicNum}')" type="button">
+                        ${isCurrentFavorite ? '💔 Удалить тему из избранного' : '❤️ Добавить эту тему в избранное'}
+                    </button>
+                    <div class="bookmark-current-place-hint" title="${this.escapeText(locationHintText)}">
+                        <span class="course-badge ${badgeClass}">${badgeText}</span>
+                        <span class="place-hint-text">${this.escapeText(locationHintText)}</span>
+                    </div>
+                </div>
+            `;
+        }
 
         if (this.favorites.length === 0) {
-            container.innerHTML = '<div class="empty-list">Нет избранных практик</div>';
+            container.innerHTML = `
+                <div class="bookmarks-empty-state">
+                    <div class="empty-list-icon">❤️</div>
+                    <div class="empty-list-title">Нет избранных практик</div>
+                    <p class="empty-list-desc">Нажмите кнопку выше или на сердечко в теме, чтобы добавить её в избранное.</p>
+                </div>
+            `;
             this.openModal('favoritesModal');
             return;
         }
 
         container.innerHTML = this.favorites.map((f, index) => {
             const cId = f.course || 'course1';
-            const badgeClass = cId === 'course2' ? 'badge-vol2' : 'badge-vol1';
-            const badgeText = cId === 'course2' ? 'Том II' : 'Том I';
+            const fBadgeClass = cId === 'course2' ? 'badge-vol2' : 'badge-vol1';
+            const fBadgeText = cId === 'course2' ? 'Том II' : 'Том I';
             return `
-                <div class="list-item">
+                <div class="list-item" tabindex="0" role="button"
+                     aria-label="Перейти к избранному: ${this.escapeText(f.name)}"
+                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();app.loadFavorite(${index});}else if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();app.removeFavorite(${index});}">
                     <div class="list-item-content" onclick="app.loadFavorite(${index})">
-                        <div class="list-item-title"><span class="course-badge ${badgeClass}">${badgeText}</span>${f.name}</div>
+                        <div class="list-item-title">
+                            <span class="course-badge ${fBadgeClass}">${fBadgeText}</span>
+                            ${this.escapeText(f.name)}
+                        </div>
                         <div class="list-item-subtitle">Урок ${f.lesson}, Тема ${f.topic}</div>
                     </div>
-                    <button class="list-item-remove" onclick="app.removeFavorite(${index})" title="Удалить из избранного">×</button>
+                    <button class="list-item-remove" onclick="event.stopPropagation(); app.removeFavorite(${index})" title="Удалить из избранного" aria-label="Удалить из избранного" type="button">×</button>
                 </div>
             `;
         }).join('');
@@ -2191,12 +2238,13 @@ class YogaApp {
         const fav = this.favorites[index];
         if (fav) {
             const cId = fav.course || 'course1';
+            this.closeModal('favoritesModal');
             if (cId !== this.currentCourse) {
                 await this.switchCourse(cId, fav.lesson, fav.topic);
             } else {
                 this.loadTopic(fav.lesson, fav.topic);
             }
-            this.closeModal('favoritesModal');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     }
 
@@ -2231,6 +2279,10 @@ class YogaApp {
         }
         this.saveUserData();
         this.updateFavoriteButtonState(isNowFavorite);
+
+        if (document.getElementById('favoritesModal')?.classList.contains('active')) {
+            this.showFavorites();
+        }
     }
 
     updateFavoriteButtonState(isFavorite) {
@@ -2240,6 +2292,10 @@ class YogaApp {
                 btn.innerHTML = isFavorite ? '❤️ В избранном' : '🤍 В избранное';
             }
         });
+        const headerBtn = document.getElementById('favoritesBtn');
+        if (headerBtn) {
+            headerBtn.classList.toggle('active', !!isFavorite);
+        }
     }
 
     removeFavorite(index) {
@@ -2255,50 +2311,6 @@ class YogaApp {
             );
             this.updateFavoriteButtonState(isFavorite);
         }
-    }
-
-    showProgress() {
-        // Count total topics from lessons structure
-        let totalTopics = 0;
-        for (const lesson of Object.values(this.data.lessons)) {
-            totalTopics += Object.keys(lesson.topics).length;
-        }
-        const topicsRead = Object.keys(this.readProgress).length;
-        const percentage = Math.round((topicsRead / totalTopics) * 100);
-
-        const container = document.getElementById('progressContent');
-        container.innerHTML = `
-            <div class="progress-overview">
-                <div class="progress-percentage">${percentage}%</div>
-                <div class="progress-label">Пройдено материала</div>
-                <div style="margin-top: 0.5rem; font-size: 0.9rem;">
-                    ${topicsRead} из ${totalTopics} тем
-                </div>
-            </div>
-
-            <div class="progress-details">
-                <h3 style="margin-bottom: 1rem;">Прогресс по урокам</h3>
-                ${Object.entries(this.data.lessons).map(([lessonNum, lesson]) => {
-                    const topicKeys = Object.keys(lesson.topics);
-                    const completedTopics = topicKeys.filter(t =>
-                        this.readProgress[`${lessonNum}-${t}`]
-                    ).length;
-                    const lessonPercentage = Math.round((completedTopics / topicKeys.length) * 100);
-
-                    return `
-                        <div class="lesson-progress">
-                            <div class="lesson-progress-name">Урок ${lessonNum}</div>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: ${lessonPercentage}%"></div>
-                            </div>
-                            <span style="margin-left: 0.5rem; font-size: 0.85rem;">${completedTopics}/${topicKeys.length}</span>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
-
-        this.openModal('progressModal');
     }
 
     async performSearch(query) {

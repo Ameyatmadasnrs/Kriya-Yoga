@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Крийя Йога — электронная библиотека</title>
-    <link rel="stylesheet" href="styles.css?v=20261103_2">
+    <link rel="stylesheet" href="styles.css?v=20261104_1">
 </head>
 <body>
     <div id="app">
@@ -56,13 +56,6 @@
                             <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
                         </svg>
                         <span class="emoji-fallback">❤️</span>
-                    </button>
-                    <button class="icon-btn" id="progressBtn" type="button" aria-label="Прогресс чтения" title="Прогресс чтения">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <polyline points="12 6 12 12 16 14"></polyline>
-                        </svg>
-                        <span class="emoji-fallback">📊</span>
                     </button>
                 </div>
             </div>
@@ -120,16 +113,8 @@
             <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="favoritesTitle" tabindex="-1">
                 <button class="close-btn" id="closeFavorites" type="button" aria-label="Закрыть избранное">&times;</button>
                 <h2 id="favoritesTitle">Избранное</h2>
+                <div id="favoriteCurrentAction" class="bookmark-current-action"></div>
                 <div id="favoritesList" class="list-container"></div>
-            </div>
-        </div>
-
-        <!-- Progress Modal -->
-        <div class="modal" id="progressModal" aria-hidden="true">
-            <div class="modal-content progress-modal" role="dialog" aria-modal="true" aria-labelledby="progressTitle" tabindex="-1">
-                <button class="close-btn" id="closeProgress" type="button" aria-label="Закрыть прогресс">&times;</button>
-                <h2 id="progressTitle">Прогресс обучения</h2>
-                <div id="progressContent" class="progress-content"></div>
             </div>
         </div>
 
@@ -154,5 +139,5 @@
         <div class="toast" id="toast"></div>
     </div>
 
-    <script src="app.js?v=20261103_2"></script>
+    <script src="app.js?v=20261104_1"></script>
 </body></html>

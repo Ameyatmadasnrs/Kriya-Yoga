@@ -156,6 +156,23 @@ body.vedic-theme .normal-only { display: none; }
 
 .icon-btn { display: inline-grid; place-items: center; flex: 0 0 40px; color: var(--ink-muted); }
 .icon-btn svg { display: block; width: 18px; height: 18px; }
+
+.icon-btn.active {
+    color: var(--accent);
+    background: var(--accent-soft);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.bookmark-save-primary-btn.active {
+    background: var(--surface);
+    color: var(--accent);
+    border-color: var(--accent);
+}
+.bookmark-save-primary-btn.active:hover {
+    background: var(--accent-soft);
+    color: var(--brand-strong);
+    border-color: var(--brand-strong);
+}
+
 .emoji-fallback { display: none; }
 
 /* Desktop contents panel; the same control collapses and restores it. */
@@ -255,7 +272,7 @@ body.vedic-theme .normal-only { display: none; }
     border-bottom: 1px solid var(--line);
     scroll-margin-top: calc(var(--header-height) + 1.25rem);
 }
-.page-header h1 { margin: 0 0 8px; color: var(--brand-strong); font-family: var(--reading-font); font-size: clamp(2rem, 3vw, 2.8rem); font-weight: 500; letter-spacing: -.035em; line-height: 1.12; text-wrap: balance; overflow-wrap: anywhere; }
+.page-header h1 { margin: 0 0 8px; color: var(--brand-strong); font-family: var(--reading-font); font-size: clamp(2.2rem, 3.2vw, 2.85rem); font-weight: 500; letter-spacing: -.035em; line-height: 1.12; text-wrap: balance; overflow-wrap: anywhere; }
 .page-header .subtitle { color: var(--ink-muted); font-size: .95rem; line-height: 1.5; overflow-wrap: anywhere; }
 .page-heading-group .subtitle { font-size: .76rem; font-weight: 650; letter-spacing: .075em; text-transform: uppercase; }
 .topic-page-header {
@@ -283,8 +300,9 @@ body.vedic-theme .normal-only { display: none; }
     margin: 0 auto;
     color: var(--ink);
     font-family: var(--reading-font);
-    font-size: clamp(1.08rem, 1.08vw, 1.19rem);
-    line-height: 1.82;
+    font-size: clamp(1.375rem, 1.25vw + 0.95rem, 1.5rem);
+    line-height: 1.8;
+    max-width: 68ch;
     text-align: left;
     overflow-wrap: break-word;
     hyphens: none;
@@ -297,7 +315,7 @@ body.vedic-theme .normal-only { display: none; }
     margin: 1.55em 0 .45em;
     color: var(--brand-strong);
     font-family: var(--reading-font);
-    font-size: 1.12rem;
+    font-size: 1.35rem;
     font-weight: 700;
     font-style: normal;
     display: flex;
@@ -324,7 +342,7 @@ body.vedic-theme .normal-only { display: none; }
     border-radius: 0 8px 8px 0;
     font-style: italic;
     color: var(--ink);
-    font-size: 1.03rem;
+    font-size: 1.22rem;
     line-height: 1.75;
 }
 .page-content blockquote p,
@@ -342,8 +360,8 @@ body.vedic-theme .normal-only { display: none; }
     font-style: normal;
     color: var(--ink-muted);
 }
-.page-content h3 { margin: 1.85em 0 .62em; color: var(--brand-strong); font-family: var(--reading-font); font-size: 1.38rem; font-weight: 700; letter-spacing: -.018em; line-height: 1.3; text-wrap: balance; }
-.page-content h4 { margin: 1.45em 0 .48em; color: var(--accent); font-family: var(--reading-font); font-size: 1.13rem; font-weight: 700; font-style: italic; line-height: 1.42; text-wrap: balance; }
+.page-content h3 { margin: 1.85em 0 .62em; color: var(--brand-strong); font-family: var(--reading-font); font-size: 1.65rem; font-weight: 700; letter-spacing: -.018em; line-height: 1.32; text-wrap: balance; }
+.page-content h4 { margin: 1.45em 0 .48em; color: var(--accent); font-family: var(--reading-font); font-size: 1.38rem; font-weight: 700; font-style: italic; line-height: 1.38; text-wrap: balance; }
 .page-content ul, .page-content ol { margin: 1em 0 1.4em; padding-left: 1.5em; }
 .page-content li { padding-left: .2em; margin: .35em 0; }
 .page-content strong { color: var(--brand-strong); }
@@ -705,8 +723,12 @@ body.vedic-theme .lesson-item.active { background: rgba(255, 242, 223, .06); }
     #contentArea { padding: 30px clamp(18px, 5vw, 30px) 52px; border-inline: 0; }
     .topic-page-header { grid-template-columns: minmax(0, 1fr); gap: 6px; margin-bottom: 28px; padding-bottom: 18px; }
     .lesson-kicker { padding-top: 0; }
-    .page-header h1 { font-size: clamp(1.8rem, 6.5vw, 2.35rem); }
-    .page-content { font-size: 1.08rem; line-height: 1.82; }
+    .page-header h1 { font-size: clamp(1.85rem, 6.2vw, 2.3rem); }
+    .page-content { font-size: clamp(1.28rem, 4vw, 1.35rem); line-height: 1.76; }
+    .page-content h3 { font-size: 1.45rem; }
+    .page-content h4 { font-size: 1.25rem; }
+    .page-content .stage-heading { font-size: 1.25rem; }
+    .page-content blockquote, .page-content .shloka-quote { font-size: 1.18rem; }
     .topic-image-container { margin-block: 1.5rem; }
     .topic-image { max-height: 64vh; }
 }
@@ -721,8 +743,11 @@ body.vedic-theme .lesson-item.active { background: rgba(255, 242, 223, .06); }
     .main-content, .main-content.expanded { padding: 10px 7px 24px; }
     #contentArea { padding: 24px 16px 40px; }
     .topic-page-header { margin-bottom: 24px; padding-bottom: 16px; }
-    .page-header h1 { font-size: clamp(1.55rem, 7.2vw, 1.9rem); }
-    .page-content { font-size: 1.025rem; line-height: 1.78; }
+    .page-header h1 { font-size: clamp(1.6rem, 7vw, 1.95rem); }
+    .page-content { font-size: 1.28rem; line-height: 1.72; }
+    .page-content h3 { font-size: 1.35rem; }
+    .page-content h4 { font-size: 1.2rem; }
+    .page-content .stage-heading { font-size: 1.2rem; }
     .topic-image-container { margin-block: 1rem; }
     .topic-image { max-height: 58vh; }
     .content-actions { display: grid; grid-template-columns: 1fr; }
